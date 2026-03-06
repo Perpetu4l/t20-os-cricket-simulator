@@ -1,3 +1,16 @@
+#ifndef SIMULATOR_H
+#define SIMULATOR_H
+
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define MAX_FIELDERS 10
+#define MAX_BATSMEN 11
+#define MAX_BOWLERS 5
+#define MAX_OVERS 20
+
 typedef struct {
     int runs;
     int wickets;
@@ -7,9 +20,9 @@ typedef struct {
 
 typedef struct {
     int id;
-    char name[50];
     int runs;
     int balls_faced;
+    int is_out;
 } Batsman;
 
 typedef struct {
@@ -21,10 +34,9 @@ typedef struct {
 
 typedef struct {
     Scoreboard score;
-    int ball_in_air;
     int match_running;
 } MatchState;
 
 extern MatchState match;
-extern pthread_mutex_t score_mutex;
-extern pthread_mutex_t pitch_mutex;
+
+#endif
