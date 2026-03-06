@@ -11,6 +11,7 @@
 #define MAX_BATSMEN 11
 #define MAX_BOWLERS 5
 #define MAX_OVERS 20
+#define DEATH_OVER_BOWLER 4
 
 typedef struct {
     int runs;
@@ -24,6 +25,7 @@ typedef struct {
     int runs;
     int balls_faced;
     int is_out;
+    int job_length;
 } Batsman;
 
 typedef struct {
@@ -36,6 +38,7 @@ typedef struct {
 typedef struct {
     Scoreboard score;
     int match_running;
+    int ball_in_air;
 } MatchState;
 
 extern MatchState match;
@@ -53,12 +56,24 @@ extern pthread_mutex_t pitch_mutex;
 
 extern pthread_mutex_t score_mutex;
 
+extern pthread_mutex_t print_mutex;
+
+
 extern sem_t crease_sem;
 
 extern pthread_cond_t ball_hit_cond;
 extern pthread_mutex_t fielder_mutex;
 
 
+/* scheduler */
+
+extern int current_bowler;
+extern pthread_t bowler_threads[MAX_BOWLERS];
+extern Batsman batsmen[MAX_BATSMEN];
+
+void round_robin_scheduler();
+int sjf_scheduler();
+void priority_scheduler();
 
 
 #endif

@@ -21,14 +21,29 @@ void update_score(int result) {
     pthread_mutex_lock(&score_mutex);
 
     if(result == -1) {
+
         match.score.wickets++;
+
+        pthread_mutex_lock(&print_mutex);
         printf("WICKET!\n");
+        pthread_mutex_unlock(&print_mutex);
+
+        int next = sjf_scheduler();
+
+        pthread_mutex_lock(&print_mutex);
+        printf("SJF Scheduler selected batsman %d\n", next);
+        pthread_mutex_unlock(&print_mutex);
     }
     else if(result == 7) {
+
         match.score.runs += 1;
+
+        pthread_mutex_lock(&print_mutex);
         printf("WIDE BALL\n");
+        pthread_mutex_unlock(&print_mutex);
     }
     else {
+
         match.score.runs += result;
     }
 
