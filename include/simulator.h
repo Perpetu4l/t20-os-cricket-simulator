@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+
 #define MAX_FIELDERS 10
 #define MAX_BATSMEN 11
 #define MAX_BOWLERS 5
@@ -38,5 +39,17 @@ typedef struct {
 } MatchState;
 
 extern MatchState match;
+int generate_ball_event();
+void update_score(int result);
+void log_ball(int over,int ball,int result);
+void init_sync();
+
+
+/* pitch buffer */
+extern int pitch_ball;
+
+/* synchronization */
+extern pthread_mutex_t pitch_mutex;
+
 
 #endif

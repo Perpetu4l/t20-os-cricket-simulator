@@ -8,7 +8,13 @@ void* bowler_thread(void* arg) {
 
     while(match.match_running) {
 
-        printf("Bowler delivering ball...\n");
+        pthread_mutex_lock(&pitch_mutex);
+
+        pitch_ball = generate_ball_event();
+
+        printf("Bowler delivered ball result %d\n",pitch_ball);
+
+        pthread_mutex_unlock(&pitch_mutex);
 
         sleep(1);
     }
@@ -22,7 +28,32 @@ void* batsman_thread(void* arg) {
 
     while(match.match_running) {
 
-        printf("Batsman %d waiting for ball\n", id);
+        pthread_mutex_lock(&pitch_mutex);
+
+        if(pitch_ball != -2) {
+
+            int result = pitch_ball;
+
+            update_score(result);
+
+            log_ball(
+                match.score.overs + 1,
+                match.score.balls + 1,
+                result
+            );
+
+            pitch_ball = -2;
+
+            match.score.balls++;
+
+            if(match.score.balls == 6) {
+                match.score.balls = 0;
+                match.score.overs++;
+            }
+
+        }
+
+        pthread_mutex_unlock(&pitch_mutex);
 
         sleep(1);
     }
@@ -38,7 +69,7 @@ void* fielder_thread(void* arg) {
 
         printf("Fielder %d ready\n", id);
 
-        sleep(2);
+        sleep(3);
     }
 
     return NULL;
