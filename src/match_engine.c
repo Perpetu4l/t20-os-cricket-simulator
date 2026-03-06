@@ -18,17 +18,19 @@ int generate_ball_event() {
 
 void update_score(int result) {
 
+    pthread_mutex_lock(&score_mutex);
+
     if(result == -1) {
         match.score.wickets++;
         printf("WICKET!\n");
-        return;
     }
-
-    if(result == 7) {
+    else if(result == 7) {
         match.score.runs += 1;
         printf("WIDE BALL\n");
-        return;
+    }
+    else {
+        match.score.runs += result;
     }
 
-    match.score.runs += result;
+    pthread_mutex_unlock(&score_mutex);
 }

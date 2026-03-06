@@ -26,6 +26,8 @@ void* batsman_thread(void* arg) {
 
     int id = *(int*)arg;
 
+    sem_wait(&crease_sem);
+
     while(match.match_running) {
 
         pthread_mutex_lock(&pitch_mutex);
@@ -41,6 +43,13 @@ void* batsman_thread(void* arg) {
                 match.score.balls + 1,
                 result
             );
+
+            if(result > 0) {
+
+                pthread_mutex_lock(&fielder_mutex);
+                pthread_cond_broadcast(&ball_hit_cond);
+                pthread_mutex_unlock(&fielder_mutex);
+            }
 
             pitch_ball = -2;
 
@@ -58,6 +67,8 @@ void* batsman_thread(void* arg) {
         sleep(1);
     }
 
+    sem_post(&crease_sem);
+
     return NULL;
 }
 
@@ -67,9 +78,13 @@ void* fielder_thread(void* arg) {
 
     while(match.match_running) {
 
-        printf("Fielder %d ready\n", id);
+        pthread_mutex_lock(&fielder_mutex);
 
-        sleep(3);
+        pthread_cond_wait(&ball_hit_cond,&fielder_mutex);
+
+        printf("Fielder %d chasing ball\n",id);
+
+        pthread_mutex_unlock(&fielder_mutex);
     }
 
     return NULL;

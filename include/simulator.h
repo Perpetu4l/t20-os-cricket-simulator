@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <semaphore.h>
 
 #define MAX_FIELDERS 10
 #define MAX_BATSMEN 11
@@ -50,6 +50,15 @@ extern int pitch_ball;
 
 /* synchronization */
 extern pthread_mutex_t pitch_mutex;
+
+extern pthread_mutex_t score_mutex;
+
+extern sem_t crease_sem;
+
+extern pthread_cond_t ball_hit_cond;
+extern pthread_mutex_t fielder_mutex;
+
+
 
 
 #endif
