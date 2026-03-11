@@ -16,6 +16,7 @@ void init_sync() {
 
     pthread_cond_init(&ball_hit_cond,NULL);
     pthread_mutex_init(&print_mutex, NULL);
+    
 
     sem_init(&crease_sem,0,2);
 }
