@@ -11,25 +11,26 @@ void* bowler_thread(void* arg){
 
     while(match.match_running){
 
+        pthread_mutex_lock(&pitch_mutex);
+
+        /* check inside critical section */
         if(id != current_bowler){
-            sleep(1);
+            pthread_mutex_unlock(&pitch_mutex);
+            usleep(1000);
             continue;
         }
-
-        pthread_mutex_lock(&pitch_mutex);
 
         if(pitch_ball == -2){
 
             pitch_ball = generate_ball_event();
-
 
             pthread_mutex_lock(&print_mutex);
 
             printf("Bowler %d delivered ball result %d\n",
                    id, pitch_ball);
 
-            printf("Batsman %d played the ball\n",
-                   match.striker);
+            // printf("Batsman %d played the ball\n",
+            //        match.striker);
 
             pthread_mutex_unlock(&print_mutex);
         }
@@ -55,89 +56,122 @@ void* batsman_thread(void* arg) {
         /* no ball available */
         if(pitch_ball == -2){
             pthread_mutex_unlock(&pitch_mutex);
-            sleep(1);
+            usleep(1000);
             continue;
         }
 
-        /* only ONE batsman thread processes the delivery */
-        if(id != 1){
+        if(id != 0){
             pthread_mutex_unlock(&pitch_mutex);
-            sleep(1);
             continue;
         }
 
-        /* consume the ball atomically */
+        int batsman_id = match.striker;
+          
+        // /* thread 0 = striker, thread 1 = non-striker */
+        // int batsman_id = (id == 0) ? match.striker : match.non_striker;
+
+        // /* only striker thread processes delivery */
+        // if(id != 0){
+        //     pthread_mutex_unlock(&pitch_mutex);
+        //     continue;
+        // }
+
         int result = pitch_ball;
         pitch_ball = -2;
+        pthread_mutex_lock(&print_mutex);
+        printf("Batsman %d played the ball\n", batsman_id);
+        pthread_mutex_unlock(&print_mutex);
 
-        int striker_id = match.striker;
-        record_gantt(
-            current_bowler,
-            striker_id,
-            match.score.overs,
-            match.score.balls
-        );
-        Batsman *bat = &batsmen[striker_id];
+        
+        Batsman *bat = &batsmen[batsman_id];
         Bowler *b = &bowlers[current_bowler];
-
-        /* update stats */
+        
         b->balls_bowled++;
         bat->balls_faced++;
-
+        
         if(result == -1) {
-
+            
             /* wicket */
-            b->wickets++;
             bat->is_out = 1;
-
+            b->wickets++;
+            
             update_score(result);
-
+            
             int next = sjf_scheduler();
-
+            
             pthread_mutex_lock(&print_mutex);
             printf("SJF Scheduler selected batsman %d\n", next);
             pthread_mutex_unlock(&print_mutex);
-
+            
             match.striker = next;
         }
+        
         else {
-
-            if(result != 7) {
-                b->runs_given += result;
+            
+            if(result != 7){
                 bat->runs += result;
+                b->runs_given += result;
             }
-
+            
             update_score(result);
+            
+            /* attempt runs */
+            if(result == 1 || result == 2 || result == 3){
+                
+                int runout = attempt_run(result);
 
-            /* strike change for odd runs */
-            if(result == 1 || result == 3) {
+                if(runout){
 
-                int temp = match.striker;
-                match.striker = match.non_striker;
-                match.non_striker = temp;
+                    pthread_mutex_lock(&print_mutex);
+                    printf("RUN OUT! Batsman %d is out (deadlock)\n", batsman_id);
+                    pthread_mutex_unlock(&print_mutex);
+
+                    bat->is_out = 1;
+                    b->wickets++;
+                    match.score.wickets++;
+
+                    int next = sjf_scheduler();
+
+                    pthread_mutex_lock(&print_mutex);
+                    printf("SJF Scheduler selected batsman %d\n", next);
+                    pthread_mutex_unlock(&print_mutex);
+
+                    match.striker = next;
+
+                    result = -1;   // treat runout as wicket
+                }
             }
+            
+            /* strike rotation */
+            if(result == 1 || result == 3)
+            swap_strike();
         }
 
+        record_gantt(
+            current_bowler,
+            batsman_id,
+            match.score.overs,
+            match.score.balls
+        );
+        
         log_ball(
             match.score.overs + 1,
             match.score.balls + 1,
             result
         );
+        
+        // match.score.balls++;
+        if(result != 7)   // wide does NOT count as a ball
+            match.score.balls++;
 
-        match.score.balls++;
-
-        /* end of over */
-        if(match.score.balls == 6) {
+        if(match.score.balls == 6){
 
             match.score.balls = 0;
             match.score.overs++;
 
-            /* strike rotates at over end */
-            int temp = match.striker;
-            match.striker = match.non_striker;
-            match.non_striker = temp;
+            swap_strike();
 
-            priority_scheduler();// theek krna he ise
+            priority_scheduler();
 
             if(match.score.overs < 19)
                 round_robin_scheduler();
@@ -145,8 +179,8 @@ void* batsman_thread(void* arg) {
 
         pthread_mutex_unlock(&pitch_mutex);
 
-        /* wake fielders if ball hit */
-        if(result != 7) {
+        /* wake fielders */
+        if(result != 7){
 
             pthread_mutex_lock(&fielder_mutex);
 

@@ -37,12 +37,30 @@ int sjf_scheduler(){
         }
     }
 
-    if(best != -1){
-        batsmen[best].is_out = 1;   // mark as already used
-    }
-
     return best;
 }
+
+// int sjf_scheduler(){
+
+//     int best = -1;
+//     int shortest = 100000;
+
+//     for(int i = 0; i < MAX_BATSMEN; i++){
+
+//         if(batsmen[i].is_out == 0 &&
+//            batsmen[i].job_length < shortest){
+
+//             shortest = batsmen[i].job_length;
+//             best = i;
+//         }
+//     }
+
+//     if(best != -1){
+//         batsmen[best].is_out = 1;   // mark as already used
+//     }
+
+//     return best;
+// }
 
 void priority_scheduler(){// realsitci banan he 
 

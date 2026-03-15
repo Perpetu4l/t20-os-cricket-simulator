@@ -25,6 +25,7 @@ void log_ball(int over, int ball, int result) {
     printf("Score: %d/%d\n",
         match.score.runs,
         match.score.wickets);
+    printf("--------------------------------\n");
 
     pthread_mutex_unlock(&print_mutex);
 }

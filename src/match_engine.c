@@ -53,29 +53,30 @@ void swap_strike(){
     match.striker = match.non_striker;
     match.non_striker = temp;
 }
-
-
 int attempt_run(int runs)
 {
     for(int i = 0; i < runs; i++)
     {
-        /* batsman leaving striker end */
+        /* striker leaves End1 */
         pthread_mutex_lock(&end1_mutex);
 
-        /* try to reach other end */
-        if(pthread_mutex_trylock(&end2_mutex) != 0)
+        /* simulate non-striker already occupying End2 */
+        int simulate_conflict = rand() % 4;   // 25% chance
+
+        if(simulate_conflict == 0)
         {
-            /* circular wait detected → run out */
             pthread_mutex_unlock(&end1_mutex);
-            return 1;   // runout happened
+            return 1;   // run-out due to circular wait
         }
 
-        /* simulate running */
-        sleep(1);
+        /* otherwise striker successfully reaches End2 */
+        pthread_mutex_lock(&end2_mutex);
+
+        sleep(1);  // running delay
 
         pthread_mutex_unlock(&end2_mutex);
         pthread_mutex_unlock(&end1_mutex);
     }
 
-    return 0;  // run completed safely
+    return 0;
 }
