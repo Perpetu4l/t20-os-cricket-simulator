@@ -12,6 +12,23 @@
 #define MAX_BOWLERS 5
 #define MAX_OVERS 3
 #define DEATH_OVER_BOWLER 4
+#define MAX_BALL_EVENTS 200
+
+typedef struct {
+
+    int over;
+    int ball;
+
+    int bowler_id;
+    int batsman_id;
+
+} GanttCell;
+
+extern GanttCell gantt[MAX_BALL_EVENTS];
+extern int gantt_count;
+
+void record_gantt(int bowler,int batsman,int over,int ball);
+void print_gantt_chart();
 
 typedef struct {
     int runs;
@@ -47,11 +64,13 @@ typedef struct {
 } MatchState;
 
 extern MatchState match;
+
 int generate_ball_event();
 void update_score(int result);
 void log_ball(int over,int ball,int result);
 void init_sync();
 void swap_strike();
+int attempt_run(int runs);
 
 
 /* pitch buffer */
@@ -63,7 +82,8 @@ extern pthread_mutex_t pitch_mutex;
 extern pthread_mutex_t score_mutex;
 
 extern pthread_mutex_t print_mutex;
-
+extern pthread_mutex_t end1_mutex;
+extern pthread_mutex_t end2_mutex;
 
 extern sem_t crease_sem;
 
@@ -77,6 +97,9 @@ extern int current_bowler;
 extern pthread_t bowler_threads[MAX_BOWLERS];
 extern Batsman batsmen[MAX_BATSMEN];
 extern Bowler bowlers[MAX_BOWLERS];
+
+extern pthread_mutex_t end1_mutex;
+extern pthread_mutex_t end2_mutex;
 
 void round_robin_scheduler();
 int sjf_scheduler();

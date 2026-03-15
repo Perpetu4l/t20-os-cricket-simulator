@@ -40,7 +40,7 @@ int main() {
     create_players();
 
     run_match();
-
+print_gantt_chart();
     printf("Match Finished\n");
 
     return 0;

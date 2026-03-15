@@ -71,7 +71,12 @@ void* batsman_thread(void* arg) {
         pitch_ball = -2;
 
         int striker_id = match.striker;
-
+        record_gantt(
+            current_bowler,
+            striker_id,
+            match.score.overs,
+            match.score.balls
+        );
         Batsman *bat = &batsmen[striker_id];
         Bowler *b = &bowlers[current_bowler];
 
@@ -176,9 +181,9 @@ void* fielder_thread(void* arg) {
         }
 
         pthread_mutex_unlock(&fielder_mutex);
-        pthread_mutex_lock(&print_mutex);
-        printf("Fielder %d chasing ball\n", id);
-        pthread_mutex_unlock(&print_mutex);
+        // pthread_mutex_lock(&print_mutex);
+        // printf("Fielder %d chasing ball\n", id);
+        // pthread_mutex_unlock(&print_mutex);
 
         sleep(rand() % 2 + 1);
     }
@@ -208,4 +213,4 @@ void create_players() {
         fielder_ids[i] = i+1;
         pthread_create(&fielder_threads[i], NULL, fielder_thread, &fielder_ids[i]);
     }
-}
+} 

@@ -5,6 +5,8 @@ pthread_mutex_t score_mutex;
 pthread_mutex_t fielder_mutex;
 pthread_mutex_t print_mutex;
 pthread_cond_t ball_hit_cond;
+pthread_mutex_t end1_mutex;
+pthread_mutex_t end2_mutex;
 
 sem_t crease_sem;
 
@@ -16,7 +18,10 @@ void init_sync() {
 
     pthread_cond_init(&ball_hit_cond,NULL);
     pthread_mutex_init(&print_mutex, NULL);
-    
+    pthread_mutex_init(&end1_mutex,NULL);
+    pthread_mutex_init(&end2_mutex,NULL);
+
+
 
     sem_init(&crease_sem,0,2);
 }
