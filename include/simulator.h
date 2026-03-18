@@ -70,7 +70,6 @@ void update_score(int result);
 void log_ball(int over,int ball,int result);
 void init_sync();
 void swap_strike();
-int attempt_run(int runs);
 
 
 /* pitch buffer */
@@ -82,8 +81,7 @@ extern pthread_mutex_t pitch_mutex;
 extern pthread_mutex_t score_mutex;
 
 extern pthread_mutex_t print_mutex;
-extern pthread_mutex_t end1_mutex;
-extern pthread_mutex_t end2_mutex;
+
 
 extern sem_t crease_sem;
 
@@ -98,12 +96,30 @@ extern pthread_t bowler_threads[MAX_BOWLERS];
 extern Batsman batsmen[MAX_BATSMEN];
 extern Bowler bowlers[MAX_BOWLERS];
 
+
+// crease resources
 extern pthread_mutex_t end1_mutex;
 extern pthread_mutex_t end2_mutex;
+
+
+// deadlock detection
+extern int striker_waiting;
+extern int nonstriker_waiting;
+extern pthread_mutex_t deadlock_mutex;
+
+// deadlock functions
+int attempt_run(int thread_id);
+int detect_deadlock();
+void resolve_deadlock();
 
 void round_robin_scheduler();
 int sjf_scheduler();
 void priority_scheduler();
 
+
+
+extern int run_ready;
+extern pthread_mutex_t run_mutex;
+extern pthread_cond_t run_cond;
 
 #endif

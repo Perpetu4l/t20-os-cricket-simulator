@@ -1,3 +1,4 @@
+
 #include "../include/simulator.h"
 #include <stdlib.h>
 #include <time.h>
@@ -8,11 +9,10 @@ int generate_ball_event() {
 
     if(r < 20) return -1;       // wicket
     if(r < 30) return 0;       // dot ball
-    if(r < 60) return 1;       // single
+    if(r < 90) return 1;       // single
     if(r < 65) return 2;       // double
     if(r < 85) return 4;       // four
     if(r < 95) return 6;       // six
-
     return 7;                  // wide
 }
 
@@ -53,30 +53,91 @@ void swap_strike(){
     match.striker = match.non_striker;
     match.non_striker = temp;
 }
-int attempt_run(int runs)
+
+int attempt_run(int thread_id)
 {
-    for(int i = 0; i < runs; i++)
+    if(thread_id == 0)   /* striker */
     {
-        /* striker leaves End1 */
         pthread_mutex_lock(&end1_mutex);
 
-        /* simulate non-striker already occupying End2 */
-        int simulate_conflict = rand() % 4;   // 25% chance
+        usleep(10000);
 
-        if(simulate_conflict == 0)
+        if(pthread_mutex_trylock(&end2_mutex) != 0)
         {
-            pthread_mutex_unlock(&end1_mutex);
-            return 1;   // run-out due to circular wait
+            pthread_mutex_lock(&deadlock_mutex);
+            striker_waiting = 1;
+            pthread_mutex_unlock(&deadlock_mutex);
+            return 1;
         }
-
-        /* otherwise striker successfully reaches End2 */
-        pthread_mutex_lock(&end2_mutex);
-
-        sleep(1);  // running delay
 
         pthread_mutex_unlock(&end2_mutex);
         pthread_mutex_unlock(&end1_mutex);
     }
+    else   /* non-striker */
+    {
+        pthread_mutex_lock(&end2_mutex);
+
+        usleep(10000);
+
+        if(pthread_mutex_trylock(&end1_mutex) != 0)
+        {
+            pthread_mutex_lock(&deadlock_mutex);
+            nonstriker_waiting = 1;
+            pthread_mutex_unlock(&deadlock_mutex);
+            return 1;
+        }
+
+        pthread_mutex_unlock(&end1_mutex);
+        pthread_mutex_unlock(&end2_mutex);
+    }
 
     return 0;
+}
+
+int detect_deadlock()
+{
+    pthread_mutex_lock(&deadlock_mutex);
+
+    int deadlock = striker_waiting && nonstriker_waiting;
+
+    pthread_mutex_unlock(&deadlock_mutex);
+
+    return deadlock;
+}
+void resolve_deadlock()
+{
+    int victim;
+
+    pthread_mutex_lock(&deadlock_mutex);
+
+    if(rand() % 2)
+        victim = match.striker;
+    else
+        victim = match.non_striker;
+
+    pthread_mutex_unlock(&deadlock_mutex);
+
+    printf("UMPIRE DETECTED DEADLOCK\n");
+    printf("RUN OUT! Batsman %d is run out due to deadlock\n", victim);
+
+    batsmen[victim].is_out = 1;
+    update_score(-1);
+
+    /* force release of crease resources */
+    pthread_mutex_unlock(&end1_mutex);
+    pthread_mutex_unlock(&end2_mutex);
+
+    pthread_mutex_lock(&deadlock_mutex);
+    striker_waiting = 0;
+    nonstriker_waiting = 0;
+    pthread_mutex_unlock(&deadlock_mutex);
+
+    int next = sjf_scheduler();
+
+    printf("SJF Scheduler selected batsman %d\n", next);
+
+    if(victim == match.striker)
+        match.striker = next;
+    else
+        match.non_striker = next;
 }

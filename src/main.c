@@ -19,6 +19,7 @@ int main() {
     srand(time(NULL));
 
     printf("Starting T20 Cricket Simulator\n");
+    printf("______________________________\n");
 
     match.score.runs = 0;
     match.score.wickets = 0;
