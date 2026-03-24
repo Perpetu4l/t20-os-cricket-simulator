@@ -10,7 +10,6 @@ void *bowler_thread(void *arg)
 
     while (match.match_running)
     {
-
         // wait for innings
         pthread_mutex_lock(&start_mutex);
         while (!innings_started)
