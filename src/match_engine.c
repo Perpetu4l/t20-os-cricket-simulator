@@ -52,7 +52,8 @@ int generate_ball_event(Batsman* bat){
     int skill = bat->job_length;  // 50 → top order, 3 → tail
     int r = rand() % 100;
 
-    int wicket_prob = 40 - (skill / 2);  // better batsman = safer
+    // int wicket_prob = 40 - (skill / 2);  // better batsman = safer
+    int wicket_prob = 60 - (skill / 2);  // better batsman = safer
 
     if(r < wicket_prob) return -1;
     if(r < wicket_prob + 20) return 0;
