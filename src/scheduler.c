@@ -85,3 +85,31 @@ int fcfs_scheduler(){
 
     return -1;
 }
+
+int get_next_batsman()
+{
+    if(rq_size == 0) return -1;
+
+    int idx = 0;
+
+    if(scheduling_type == 0) // SJF
+    {
+        for(int i = 1; i < rq_size; i++)
+        {
+            if(batsmen[ready_queue[i]].job_length <
+               batsmen[ready_queue[idx]].job_length)
+                idx = i;
+        }
+    }
+    // FCFS → idx = 0
+
+    int chosen = ready_queue[idx];
+
+    // remove from queue
+    for(int i = idx; i < rq_size - 1; i++)
+        ready_queue[i] = ready_queue[i + 1];
+
+    rq_size--;
+
+    return chosen;
+}

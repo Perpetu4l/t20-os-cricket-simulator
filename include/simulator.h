@@ -12,7 +12,7 @@
 #define MAX_FIELDERS 10
 #define MAX_BATSMEN 11
 #define MAX_BOWLERS 5
-#define MAX_OVERS 5
+#define MAX_OVERS 20
 #define DEATH_OVER_BOWLER 4
 #define MAX_BALL_EVENTS 200
 
@@ -30,6 +30,8 @@ extern int gantt_count;
 
 void record_gantt(int bowler,int batsman,int over,int ball);
 void print_gantt_chart();
+
+
 
 typedef struct {
     int runs;
@@ -124,7 +126,6 @@ int detect_deadlock();
 void resolve_deadlock();
 
 void round_robin_scheduler();
-int sjf_scheduler();
 void priority_scheduler();
 
 void print_batsman_stats(Batsman* team, char* name);
@@ -155,5 +156,13 @@ extern int scheduling_type;
 
 
 extern pthread_mutex_t start_mutex;
+
+
+extern int rq_size;
+extern int ready_queue[MAX_BATSMEN];
+
+
+int get_next_batsman();
+
 
 #endif

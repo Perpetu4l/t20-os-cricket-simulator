@@ -3,8 +3,10 @@
 
 GanttCell gantt_chart[MAX_BALL_EVENTS];
 int gantt_count = 0;
-int mode;
-int innings;
+extern int innings;
+extern int scheduling_type;
+extern Batsman* batsmen;
+extern Bowler* bowlers;
 
 void record_gantt(int bowler,int batsman,int over,int ball)
 {

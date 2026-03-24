@@ -13,6 +13,9 @@ int scheduling_type = 0; // 0 = SJF, 1 = FCFS
 float sjf_avg_team1, sjf_avg_team2;
 float fcfs_avg_team1, fcfs_avg_team2;
 
+int rq_size = 0;
+int ready_queue[MAX_BATSMEN];
+
 int innings_started = 0;
 pthread_mutex_t start_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t start_cond = PTHREAD_COND_INITIALIZER;
@@ -196,6 +199,15 @@ void run_match(int mode)
     match.non_striker = 1;
     match.next_batsman = 2;
 
+    rq_size = 0;
+
+    for(int i = 2; i < MAX_BATSMEN; i++){
+        ready_queue[rq_size++] = i;
+        batsmen[i].arrival_time = global_time;
+    }
+
+    
+
     pthread_mutex_lock(&start_mutex);
     innings_started = 1;
     pthread_cond_broadcast(&start_cond);
@@ -266,6 +278,13 @@ void run_match(int mode)
     match.striker = 0;
     match.non_striker = 1;
     match.next_batsman = 2;
+
+    rq_size = 0;
+
+    for(int i = 2; i < MAX_BATSMEN; i++){
+        ready_queue[rq_size++] = i;
+        batsmen[i].arrival_time = global_time;
+    }
 
     pthread_mutex_lock(&start_mutex);
     innings_started = 1;
@@ -354,8 +373,9 @@ void init_batsmen()
         "Stoinis", "Carey", "Cummins",
         "Starc", "Hazlewood", "Zampa"};
 
-    int job_lengths[MAX_BATSMEN] =
-        {50, 40, 30, 25, 20, 15, 12, 10, 7, 5, 3};
+    // int job_lengths[MAX_BATSMEN] =
+    //     {50, 40, 30, 25, 20, 15, 12, 10, 7, 5, 3};
+    int job_lengths[MAX_BATSMEN] = {45, 42, 38, 34, 30, 26, 22, 16, 12, 8, 5};
 
     for (int i = 0; i < MAX_BATSMEN; i++)
     {

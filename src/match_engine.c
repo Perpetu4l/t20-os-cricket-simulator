@@ -46,23 +46,32 @@ void perform_toss(){
     printf("\n");
 }
 
-
 int generate_ball_event(Batsman* bat){
 
-    int skill = bat->job_length;  // 50 → top order, 3 → tail
+    int skill = bat->job_length;
     int r = rand() % 100;
 
-    // int wicket_prob = 40 - (skill / 2);  // better batsman = safer
-    int wicket_prob = 60 - (skill / 2);  // better batsman = safer
+    int wicket_prob = 3 + (45 - skill)/6;
 
     if(r < wicket_prob) return -1;
-    if(r < wicket_prob + 20) return 0;
-    if(r < wicket_prob + 40) return 1;
-    if(r < wicket_prob + 55) return 2;
-    if(r < wicket_prob + 75) return 4;
-    if(r < wicket_prob + 90) return 6;
+    r -= wicket_prob;
 
-    return 7;
+    if(r < 30) return 0;
+    r -= 30;
+
+    if(r < 40) return 1;
+    r -= 40;
+
+    if(r < 15) return 2;
+    r -= 15;
+
+    int four_prob = 10 + skill/5;
+    int six_prob  = 5 + skill/12;
+
+    if(r < four_prob) return 4;
+    if(r < four_prob + six_prob) return 6;
+
+    return 0;
 }
 
 

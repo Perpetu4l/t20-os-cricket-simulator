@@ -110,6 +110,8 @@ void *batsman_thread(void *arg)
         int next_batsman = -1;
 
         int batsman_id = match.striker;
+
+        
         int result = generate_ball_event(&batsmen[batsman_id]);
         //  GLOBAL TIME STEP (ONE BALL PROCESSED)
         global_time++;
@@ -234,10 +236,21 @@ void *batsman_thread(void *arg)
             b->wickets++;
             update_score(-1);
 
-            if (scheduling_type == 0)
-                next_batsman = sjf_scheduler();
-            else
-                next_batsman = fcfs_scheduler();
+            next_batsman = get_next_batsman();
+
+            if(next_batsman == -1){
+                wicket_happened = 0;
+            }
+            else{
+                batsmen[next_batsman].arrival_time = global_time;
+
+                wicket_happened = 1;
+
+                if(out_player == match.striker)
+                    match.striker = next_batsman;
+                else
+                    match.non_striker = next_batsman;
+            }
 
             if (next_batsman < 0 || next_batsman >= MAX_BATSMEN)
             {
