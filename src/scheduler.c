@@ -5,19 +5,34 @@ void round_robin_scheduler(){
 
     int prev = current_bowler;
 
-    current_bowler =
-        (current_bowler + 1) % MAX_BOWLERS;
+    current_bowler = (current_bowler + 1) % MAX_BOWLERS;
 
     pthread_mutex_lock(&print_mutex);
 
-    printf("\n---- Context Switch ----\n");
-    printf("Saving Bowler %d stats:\n", prev);
-    printf("Balls: %d  Runs: %d  Wickets: %d\n",
-        bowlers[prev].balls_bowled,
-        bowlers[prev].runs_given,
-        bowlers[prev].wickets);
+    int balls = bowlers[prev].balls_bowled;
+    int ov = balls / 6;
+    int rem = balls % 6;
 
-    printf("Loading Bowler %d\n\n", current_bowler);
+    double economy = 0.0;
+    if(balls > 0){
+        economy = bowlers[prev].runs_given / (balls / 6.0);
+    }
+
+    printf("\n  [RR CTX SWITCH] End of over %d | %s: %d.%d ov %d R %d W Econ: %.2f\n",
+        match.score.overs,
+        bowlers[prev].name,
+        ov, rem,
+        bowlers[prev].runs_given,
+        bowlers[prev].wickets,
+        economy
+    );
+
+    
+
+    printf("  [RR CTX SWITCH] Loading %s for over %d...\n\n",
+        bowlers[current_bowler].name,
+        match.score.overs + 1
+    );
 
     pthread_mutex_unlock(&print_mutex);
 }
@@ -29,9 +44,11 @@ int sjf_scheduler(){
 
     for(int i = 0; i < MAX_BATSMEN; i++){
 
-        if(batsmen[i].is_out == 0 &&
-           batsmen[i].job_length < shortest){
+        if(batsmen[i].is_out) continue;
 
+        if(i == match.striker || i == match.non_striker) continue;
+
+        if(batsmen[i].job_length < shortest){
             shortest = batsmen[i].job_length;
             best = i;
         }
@@ -39,28 +56,6 @@ int sjf_scheduler(){
 
     return best;
 }
-
-// int sjf_scheduler(){
-
-//     int best = -1;
-//     int shortest = 100000;
-
-//     for(int i = 0; i < MAX_BATSMEN; i++){
-
-//         if(batsmen[i].is_out == 0 &&
-//            batsmen[i].job_length < shortest){
-
-//             shortest = batsmen[i].job_length;
-//             best = i;
-//         }
-//     }
-
-//     if(best != -1){
-//         batsmen[best].is_out = 1;   // mark as already used
-//     }
-
-//     return best;
-// }
 
 void priority_scheduler(){// realsitci banan he 
 
@@ -75,4 +70,18 @@ void priority_scheduler(){// realsitci banan he
 
         pthread_mutex_unlock(&print_mutex);
     }
+}
+
+int fcfs_scheduler(){
+
+    for(int i = 0; i < MAX_BATSMEN; i++){
+
+        if(batsmen[i].is_out) continue;
+
+        if(i == match.striker || i == match.non_striker) continue;
+
+        return i;
+    }
+
+    return -1;
 }
