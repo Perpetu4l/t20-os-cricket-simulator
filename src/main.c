@@ -3,6 +3,7 @@
 
 MatchState match;
 int pitch_ball = -2;
+int free_hit=0;
 
 int target_score = 0;
 int innings = 1;
@@ -390,7 +391,7 @@ void init_batsmen()
 
     char *names2[MAX_BATSMEN] = {
         "Devon Conway", "Finn Allen", "Kane Williamson", "Daryl Mitchell", "Glenn Phillips",
-        "James Neesham", "Mitchell Santner", "Tim Seifert",
+        "James Neesham", "Santner", "Tim Seifert",
         "Trent Boult", "Tim Southee", "Lockie Ferguson"
     };
 

@@ -14,7 +14,7 @@
 #define MAX_BOWLERS 5
 #define MAX_OVERS 20
 #define DEATH_OVER_BOWLER 4
-#define MAX_BALL_EVENTS 500
+#define MAX_BALL_EVENTS 800
 
 typedef struct {
     int over;
@@ -89,7 +89,11 @@ extern Team team2;
 extern MatchState match;
 
 void update_score(int result);
-void log_ball(int over,int ball,int result,int batsman_id);
+void log_ball(int over, int ball, int result,
+              int striker_id, int non_striker_id,
+              int striker_before, int non_striker_before,
+              int dismissal_type, int fielder_id,
+              int was_free_hit);
 void init_sync();
 void swap_strike();
 
@@ -124,7 +128,6 @@ extern pthread_mutex_t deadlock_mutex;
 int attempt_run(int thread_id);
 int detect_deadlock();
 void resolve_deadlock();
-
 void round_robin_scheduler();
 void priority_scheduler();
 
@@ -162,5 +165,13 @@ extern int ready_queue[MAX_BATSMEN];
 extern pthread_mutex_t crease_mutex;
 
 int get_next_batsman();
+
+extern int free_hit;
+
+#define OUT_NONE     0
+#define OUT_BOWLED   1
+#define OUT_RUNOUT   2
+#define OUT_DEADLOCK 3
+
 
 #endif

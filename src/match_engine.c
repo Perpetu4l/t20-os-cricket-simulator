@@ -45,16 +45,20 @@ void perform_toss(){
 
     printf("\n");
 }
-
-int generate_ball_event(Batsman* bat, Bowler* bowler){
-
+int generate_ball_event(Batsman* bat, Bowler* bowler)
+{
     int skill = bat->job_length;
     int r = rand() % 100;
 
+     // ───── NO BALL (2%) ─────
+    if (r < 2) return 8;
+    r -= 2;
+
+    // ───── WIDE (6%) ─────
+    if (r < 6) return 7;
+    r -= 6;
+
     // ───── WICKET ─────
-    if(r<5){
-        return 8;
-    }
     int skill_diff = bat->job_length - bowler->skill;
     int wicket_prob = 8 - skill_diff / 6;
 
@@ -64,37 +68,28 @@ int generate_ball_event(Batsman* bat, Bowler* bowler){
     if (r < wicket_prob) return -1;
     r -= wicket_prob;
 
-    // ───── WIDE ─────
-    int wide_prob = 4;
-    if(r < wide_prob) return 7;
-    r -= wide_prob;
-
     // ───── DOT ─────
-    int dot_prob = 18;
-    if(r < dot_prob) return 0;
-    r -= dot_prob;
+    if (r < 18) return 0;
+    r -= 18;
 
     // ───── SINGLES ─────
-    int one_prob = 32;
-    if(r < one_prob) return 1;
-    r -= one_prob;
+    if (r < 32) return 1;
+    r -= 32;
 
     // ───── DOUBLES ─────
-    int two_prob = 14;
-    if(r < two_prob) return 2;
-    r -= two_prob;
+    if (r < 14) return 2;
+    r -= 14;
 
     // ───── THREES ─────
-    int three_prob = 3;
-    if(r < three_prob) return 3;
-    r -= three_prob;
+    if (r < 3) return 3;
+    r -= 3;
 
     // ───── BOUNDARIES ─────
-    int four_prob = 16 + skill/5;
-    int six_prob  = 9 + skill/8;
+    int four_prob = 16 + skill / 5;
+    int six_prob  = 9 + skill / 8;
 
-    if(r < four_prob) return 4;
-    if(r < four_prob + six_prob) return 6;
+    if (r < four_prob) return 4;
+    if (r < four_prob + six_prob) return 6;
 
     return 1;
 }
@@ -193,7 +188,7 @@ void resolve_deadlock()
 {
     pthread_mutex_lock(&print_mutex);
 
-    printf("\n  [UMPIRE/KERNEL] *** DEADLOCK DETECTED: RUN-OUT ***\n\n");
+    printf("        [KERNEL] Deadlock detected → resolving via run-out\n");
 
     pthread_mutex_unlock(&print_mutex);
 
