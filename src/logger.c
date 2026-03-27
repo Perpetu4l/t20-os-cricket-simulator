@@ -18,6 +18,7 @@ void log_ball(int over, int ball, int result, int batsman_id) {
     else if(result == 4) strcpy(event, "FOUR!");
     else if(result == 6) strcpy(event, "SIX!!");
     else if(result == 7) strcpy(event, "Wide");
+    else if(result == 8) strcpy(event, "NO BALL");
 
     
     printf("  Over %2d.%d  %-15s to %-15s %-8s  %3d/%d\n",

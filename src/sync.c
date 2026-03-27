@@ -6,6 +6,12 @@ pthread_mutex_t fielder_mutex;
 pthread_mutex_t print_mutex;
 pthread_cond_t ball_hit_cond;
 
+pthread_mutex_t crease_mutex;
+// in init_sync():
+
+
+
+
 pthread_mutex_t end1_mutex;
 pthread_mutex_t end2_mutex;
 
@@ -37,6 +43,8 @@ void init_sync() {
 
     pthread_mutex_init(&run_mutex, NULL);
 pthread_cond_init(&run_cond, NULL);
+
+pthread_mutex_init(&crease_mutex, NULL);
 
 
 

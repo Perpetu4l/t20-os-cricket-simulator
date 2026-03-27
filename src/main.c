@@ -13,6 +13,11 @@ int scheduling_type = 0; // 0 = SJF, 1 = FCFS
 float sjf_avg_team1, sjf_avg_team2;
 float fcfs_avg_team1, fcfs_avg_team2;
 
+
+char *first_team_name;
+char *second_team_name;
+
+
 int rq_size = 0;
 int ready_queue[MAX_BATSMEN];
 
@@ -60,7 +65,7 @@ int main()
     match.run_in_progress = 0;
 
     strcpy(team1.name, "India");
-    strcpy(team2.name, "Australia");
+    strcpy(team2.name, "New Zealand");
 
     init_sync();
     init_batsmen();
@@ -82,6 +87,7 @@ int main()
 
     /* ================= SJF ================= */
 
+
     printf("\n\n========== SJF SIMULATION ==========\n");
 
     global_time = 0;
@@ -99,7 +105,7 @@ int main()
     pthread_cond_broadcast(&start_cond);
     pthread_mutex_unlock(&start_mutex);
 
-    sleep(1); // give threads time to enter wait
+    usleep(1000); // give threads time to enter wait
 
     /* RESET EVERYTHING PROPERLY */
     reset_match_state();
@@ -114,6 +120,7 @@ int main()
 
     /* ================= FCFS ================= */
     match.match_running = 1;
+    // DO NOT reset sjf here
     printf("\n\n========== FCFS SIMULATION ==========\n");
 
     pthread_mutex_lock(&start_mutex);
@@ -194,6 +201,8 @@ void run_match(int mode)
             bowlers = team2.bowlers;
         }
     }
+
+    first_team_name = (batsmen == team1.players) ? team1.name : team2.name;
     // 🔥 RESET STRIKERS FOR THIS TEAM
     match.striker = 0;
     match.non_striker = 1;
@@ -223,7 +232,7 @@ void run_match(int mode)
             break;
         if (match.score.wickets >= 10)
             break;
-        sleep(1);
+        usleep(1000);
     }
 
     target_score = match.score.runs + 1;
@@ -239,7 +248,8 @@ void run_match(int mode)
     pthread_cond_broadcast(&start_cond);
     pthread_mutex_unlock(&start_mutex);
 
-    sleep(1); // allow threads to pause
+    // sleep(1)
+usleep(10000); // allow threads to pause
 
     /* ================= RESET ================= */
 
@@ -274,6 +284,8 @@ void run_match(int mode)
             bowlers = team1.bowlers;
         }
     }
+
+    second_team_name = (batsmen == team1.players) ? team1.name : team2.name;
     // 🔥 RESET STRIKERS FOR SECOND INNINGS TEAM
     match.striker = 0;
     match.non_striker = 1;
@@ -308,6 +320,7 @@ void run_match(int mode)
         {
             printf("\nOVERS COMPLETED!\n");
             break;
+
         }
 
         if (match.score.wickets >= 10)
@@ -316,7 +329,8 @@ void run_match(int mode)
             break;
         }
 
-        sleep(1);
+        // sleep(1)
+usleep(10000);
     }
 
     // match.match_running = 0;
@@ -327,16 +341,20 @@ void run_match(int mode)
     printf("        MATCH RESULT\n");
     printf("==============================\n");
 
-    printf("%s: %d\n", team1.name, target_score - 1);
-    printf("%s: %d\n", team2.name, match.score.runs);
+    printf("%s: %d\n", first_team_name, target_score - 1);
+    printf("%s: %d\n", second_team_name, match.score.runs);
 
     if (match.score.runs >= target_score)
     {
-        printf("*** %s WON! ***\n", team2.name);
+        printf("*** %s WON! ***\n", second_team_name);
+    }
+    else if (match.score.runs == target_score - 1)
+    {
+        printf("*** MATCH TIED! ***\n");
     }
     else
     {
-        printf("*** %s WON! ***\n", team1.name);
+        printf("*** %s WON! ***\n", first_team_name);
     }
 
     // TEAM 1 STATS
@@ -352,33 +370,38 @@ void run_match(int mode)
 
 void init_batsmen()
 {
-
     char *roles1[MAX_BATSMEN] = {
         "Batsman", "Batsman", "Batsman", "Batsman", "WK",
         "All-Rounder", "All-Rounder", "WK",
-        "All-Rounder", "Bowler", "Bowler"};
+        "All-Rounder", "Bowler", "Bowler"
+    };
 
     char *roles2[MAX_BATSMEN] = {
         "Batsman", "Batsman", "Batsman", "Batsman", "All-Rounder",
-        "All-Rounder", "WK", "Bowler",
-        "Bowler", "Bowler", "Bowler"};
+        "All-Rounder", "All-Rounder", "WK",
+        "Bowler", "Bowler", "Bowler"
+    };
 
     char *names1[MAX_BATSMEN] = {
         "Rohit Sharma", "Gill", "Virat Kohli", "SKY", "KL Rahul",
         "Hardik Pandya", "Jadeja", "Dhoni",
-        "Axar", "Bumrah", "Siraj"};
+        "Axar", "Bumrah", "Siraj"
+    };
 
     char *names2[MAX_BATSMEN] = {
-        "Warner", "Head", "Smith", "Labuschagne", "Maxwell",
-        "Stoinis", "Carey", "Cummins",
-        "Starc", "Hazlewood", "Zampa"};
+        "Devon Conway", "Finn Allen", "Kane Williamson", "Daryl Mitchell", "Glenn Phillips",
+        "James Neesham", "Mitchell Santner", "Tim Seifert",
+        "Trent Boult", "Tim Southee", "Lockie Ferguson"
+    };
 
-    // int job_lengths[MAX_BATSMEN] =
-    //     {50, 40, 30, 25, 20, 15, 12, 10, 7, 5, 3};
-    int job_lengths[MAX_BATSMEN] = {45, 42, 38, 34, 30, 26, 22, 16, 12, 8, 5};
+    /* Slightly different strengths for both teams */
+    int job_lengths1[MAX_BATSMEN] = {50, 42, 40, 38, 34, 30, 26, 22, 18, 12, 8};
+    int job_lengths2[MAX_BATSMEN] = {47, 41, 39, 36, 33, 29, 25, 21, 17, 11, 7};
 
+    /* INIT LOOP */
     for (int i = 0; i < MAX_BATSMEN; i++)
     {
+        // TEAM 1
         team1.players[i].id = i;
         strcpy(team1.players[i].name, names1[i]);
         strcpy(team1.players[i].role, roles1[i]);
@@ -387,15 +410,13 @@ void init_batsmen()
         team1.players[i].fours = 0;
         team1.players[i].sixes = 0;
         team1.players[i].is_out = 0;
-        team1.players[i].job_length = job_lengths[i];
+        team1.players[i].job_length = job_lengths1[i];
         team1.players[i].arrival_time = 0;
         team1.players[i].start_time = -1;
         team1.players[i].wait_time = 0;
         team1.players[i].has_started = 0;
-    }
 
-    for (int i = 0; i < MAX_BATSMEN; i++)
-    {
+        // TEAM 2
         team2.players[i].id = i;
         strcpy(team2.players[i].name, names2[i]);
         strcpy(team2.players[i].role, roles2[i]);
@@ -404,12 +425,13 @@ void init_batsmen()
         team2.players[i].fours = 0;
         team2.players[i].sixes = 0;
         team2.players[i].is_out = 0;
-        team2.players[i].job_length = job_lengths[i];
+        team2.players[i].job_length = job_lengths2[i];
         team2.players[i].arrival_time = 0;
         team2.players[i].start_time = -1;
         team2.players[i].wait_time = 0;
         team2.players[i].has_started = 0;
     }
+
 }
 
 /* ================= INIT BOWLERS ================= */
@@ -421,8 +443,11 @@ void init_bowlers()
         "Bumrah", "Siraj", "Shami", "Jadeja", "Hardik"};
 
     char *names2[MAX_BOWLERS] = {
-        "Cummins", "Starc", "Hazlewood", "Zampa", "Stoinis"};
+        "Boult", "Southee", "Ferguson", "Santner", "Neesham"
+    };
 
+    int bowler_skills1[MAX_BOWLERS] = {45, 40, 38, 35, 32};
+    int bowler_skills2[MAX_BOWLERS] = {44, 39, 37, 34, 30};
     for (int i = 0; i < MAX_BOWLERS; i++)
     {
         team1.bowlers[i].id = i;

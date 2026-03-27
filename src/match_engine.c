@@ -46,34 +46,58 @@ void perform_toss(){
     printf("\n");
 }
 
-int generate_ball_event(Batsman* bat){
+int generate_ball_event(Batsman* bat, Bowler* bowler){
 
     int skill = bat->job_length;
     int r = rand() % 100;
 
-    int wicket_prob = 3 + (45 - skill)/6;
+    // ───── WICKET ─────
+    if(r<5){
+        return 8;
+    }
+    int skill_diff = bat->job_length - bowler->skill;
+    int wicket_prob = 8 - skill_diff / 6;
 
-    if(r < wicket_prob) return -1;
+    if (wicket_prob < 2) wicket_prob = 2;
+    if (wicket_prob > 15) wicket_prob = 15;
+
+    if (r < wicket_prob) return -1;
     r -= wicket_prob;
 
-    if(r < 30) return 0;
-    r -= 30;
+    // ───── WIDE ─────
+    int wide_prob = 4;
+    if(r < wide_prob) return 7;
+    r -= wide_prob;
 
-    if(r < 40) return 1;
-    r -= 40;
+    // ───── DOT ─────
+    int dot_prob = 18;
+    if(r < dot_prob) return 0;
+    r -= dot_prob;
 
-    if(r < 15) return 2;
-    r -= 15;
+    // ───── SINGLES ─────
+    int one_prob = 32;
+    if(r < one_prob) return 1;
+    r -= one_prob;
 
-    int four_prob = 10 + skill/5;
-    int six_prob  = 5 + skill/12;
+    // ───── DOUBLES ─────
+    int two_prob = 14;
+    if(r < two_prob) return 2;
+    r -= two_prob;
+
+    // ───── THREES ─────
+    int three_prob = 3;
+    if(r < three_prob) return 3;
+    r -= three_prob;
+
+    // ───── BOUNDARIES ─────
+    int four_prob = 16 + skill/5;
+    int six_prob  = 9 + skill/8;
 
     if(r < four_prob) return 4;
     if(r < four_prob + six_prob) return 6;
 
-    return 0;
+    return 1;
 }
-
 
 void update_score(int result) {
 
@@ -106,7 +130,7 @@ int attempt_run(int thread_id)
     {
         pthread_mutex_lock(&end1_mutex);
 
-        usleep(10000);
+        usleep(200);
 
         if(pthread_mutex_trylock(&end2_mutex) != 0)
         {
@@ -129,7 +153,7 @@ int attempt_run(int thread_id)
     {
         pthread_mutex_lock(&end2_mutex);
 
-        usleep(10000);
+        usleep(200);
 
         if(pthread_mutex_trylock(&end1_mutex) != 0)
         {
@@ -175,11 +199,22 @@ void resolve_deadlock()
 
     /* reset flags */
     pthread_mutex_lock(&deadlock_mutex);
-    striker_waiting = 0;
+    striker_waiting    = 0;
     nonstriker_waiting = 0;
     pthread_mutex_unlock(&deadlock_mutex);
 
-    /* force release locks (safe for recovery simulation) */
-    pthread_mutex_unlock(&end1_mutex);
-    pthread_mutex_unlock(&end2_mutex);
+    /* Force-release end1 and end2 only if they are currently locked.
+       attempt_run() releases the mutex it owns before returning 1
+       (striker releases end1, non-striker releases end2), so by the
+       time we get here both mutexes are ALREADY UNLOCKED.
+       Calling pthread_mutex_unlock on an unlocked mutex you don't own
+       is undefined behaviour and silently corrupts the mutex on Linux,
+       causing future lock calls to hang permanently.
+       Use trylock: if it succeeds we own it and can safely unlock it;
+       if it fails someone else holds it and we leave it alone. */
+    if (pthread_mutex_trylock(&end1_mutex) == 0)
+        pthread_mutex_unlock(&end1_mutex);
+
+    if (pthread_mutex_trylock(&end2_mutex) == 0)
+        pthread_mutex_unlock(&end2_mutex);
 }
