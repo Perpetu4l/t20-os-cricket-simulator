@@ -50,6 +50,7 @@ int generate_ball_event(Batsman* bat, Bowler* bowler)
     int skill = bat->job_length;
     int r = rand() % 100;
 
+
      // ───── NO BALL (2%) ─────
     if (r < 2) return 8;
     r -= 2;

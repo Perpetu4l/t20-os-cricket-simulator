@@ -46,6 +46,7 @@ void log_ball(int over, int ball, int result,
     else if(result == 8) strcpy(event, "NO BALL + Free Hit");
 
     // 🎯 MAIN LINE
+    
     printf("Over %2d.%d | %-12s → %-15s | %-22s | %3d/%d\n",
         over, ball,
         bowler,
@@ -63,6 +64,7 @@ if (was_free_hit)
 printf("\n");
 
     // 🎯 STRIKER INFO LINE (THIS IS THE SEXY PART)
+    if(ball!=0){
     printf("        %s* %d(%d)   |   %s %d(%d)\n",
         striker,
         batsmen[striker_id].runs,
@@ -71,6 +73,17 @@ printf("\n");
         batsmen[non_striker_id].runs,
         batsmen[non_striker_id].balls_faced
     );
+}
+else{
+    printf("        %s* %d(%d)   |   %s %d(%d)\n",
+        non_striker,
+        batsmen[striker_id].runs,
+        batsmen[striker_id].balls_faced,
+        striker,
+        batsmen[non_striker_id].runs,
+        batsmen[non_striker_id].balls_faced
+    );
+}
 
     // 🎯 WICKET CARD
     if (result == -1 && !(was_free_hit && dismissal_type == OUT_BOWLED))

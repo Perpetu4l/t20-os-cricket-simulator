@@ -1,7 +1,7 @@
 #include "../include/simulator.h"
 #include <errno.h>
 
-pthread_t batsman_threads[2];
+pthread_t batsman_threads[MAX_BATSMEN];
 pthread_t fielder_threads[MAX_FIELDERS];
 
 /*
@@ -27,10 +27,10 @@ pthread_t fielder_threads[MAX_FIELDERS];
    fielder_done       : set by fielder once race is resolved (win or loss).
    All protected by fielder_mutex EXCEPT crease_mutex itself.
 */
-static volatile int chosen_fielder          = -1;
-static volatile int fielder_runout_happened =  0;
-static volatile int winning_fielder_id      = -1;
-static volatile int fielder_done            =  0;
+static int chosen_fielder          = -1;
+static int fielder_runout_happened =  0;
+static int winning_fielder_id      = -1;
+static int fielder_done            =  0;
 
 /* ═══════════════════════════════════════════
    BOWLER THREAD
@@ -66,7 +66,7 @@ void *bowler_thread(void *arg)
 void *batsman_thread(void *arg)
 {
     int id = *(int *)arg;
-    sem_wait(&crease_sem);
+    
 
     while (match.match_running)
     {
@@ -75,8 +75,23 @@ void *batsman_thread(void *arg)
             pthread_cond_wait(&start_cond, &start_mutex);
         pthread_mutex_unlock(&start_mutex);
 
-        pthread_mutex_lock(&pitch_mutex);
+        
+pthread_mutex_lock(&batsman_mutex);
 
+while (id != match.striker && id != match.non_striker) {
+    pthread_cond_wait(&batsman_cond, &batsman_mutex);
+}
+
+pthread_mutex_unlock(&batsman_mutex);
+pthread_mutex_lock(&pitch_mutex);
+pthread_mutex_lock(&crease_state_mutex);
+
+if (!batsmen[id].in_crease) {
+    sem_wait(&crease_sem);
+    batsmen[id].in_crease = 1;
+}
+
+pthread_mutex_unlock(&crease_state_mutex);
         if ((match.score.overs >= MAX_OVERS) ||
             (match.score.wickets >= 10) ||
             (innings == 2 && match.score.runs >= target_score))
@@ -96,7 +111,7 @@ void *batsman_thread(void *arg)
         }
 
         /* ══ NON-STRIKER ══ */
-        if (id != 0) {
+        if (id == match.non_striker ) {
             pthread_mutex_unlock(&pitch_mutex);
             pthread_mutex_lock(&run_mutex);
             while (run_ready == 0)
@@ -287,7 +302,9 @@ void *batsman_thread(void *arg)
         if (is_legal && result != -1)
             if (runs_for_strike % 2 == 1)
                 swap_strike();
-
+pthread_mutex_lock(&batsman_mutex);
+pthread_cond_broadcast(&batsman_cond);
+pthread_mutex_unlock(&batsman_mutex);
         /* ══ WICKET HANDLING ══ */
         if (result == -1) {
             
@@ -297,7 +314,7 @@ void *batsman_thread(void *arg)
             if (deadlock_happened && runs_completed % 2 == 1)
                 swap_strike();
 
-            
+           
             if (!deadlock_happened && !fielder_runout && !free_hit)
             b->wickets++;
             
@@ -306,8 +323,14 @@ void *batsman_thread(void *arg)
                 // free_hit=0;
                 update_score(-1);
                 batsmen[out_player].is_out = 1;
-                next_batsman_idx = get_next_batsman();
+                pthread_mutex_lock(&crease_state_mutex);
 
+batsmen[out_player].in_crease = 0;
+sem_post(&crease_sem);
+
+pthread_mutex_unlock(&crease_state_mutex);
+                next_batsman_idx = get_next_batsman();
+                  
                 if (next_batsman_idx >= 0 && next_batsman_idx < MAX_BATSMEN) {
                     batsmen[next_batsman_idx].arrival_time = global_time;
                     wicket_happened = 1;
@@ -315,10 +338,14 @@ void *batsman_thread(void *arg)
                         match.striker = next_batsman_idx;
                     else
                         match.non_striker = next_batsman_idx;
+                    
                 } else {
                     next_batsman_idx = -1;
                     wicket_happened  = 0;
                 }
+                pthread_mutex_lock(&batsman_mutex);
+pthread_cond_broadcast(&batsman_cond);
+pthread_mutex_unlock(&batsman_mutex);
             }
             // if(is_legal){
             //     free_hit=0;
@@ -386,11 +413,14 @@ void *batsman_thread(void *arg)
                 match.score.balls = 0;
                 match.score.overs++;
                 swap_strike();
-
+pthread_mutex_lock(&batsman_mutex);
+pthread_cond_broadcast(&batsman_cond);
+pthread_mutex_unlock(&batsman_mutex);
                 priority_scheduler();
                 round_robin_scheduler();
 
                 pthread_mutex_lock(&run_mutex);
+                run_ready=1;
                 pthread_cond_broadcast(&run_cond);
                 pthread_mutex_unlock(&run_mutex);
 
@@ -421,7 +451,7 @@ void *batsman_thread(void *arg)
         pthread_mutex_unlock(&pitch_mutex);
     }
 
-    sem_post(&crease_sem);
+   
     return NULL;
 }
 
@@ -489,11 +519,11 @@ void create_players()
         bowler_ids[i] = i;
         pthread_create(&bowler_threads[i], NULL, bowler_thread, &bowler_ids[i]);
     }
-
-    static int batsman_ids[2] = {0, 1};
-    for (int i = 0; i < 2; i++)
-        pthread_create(&batsman_threads[i], NULL, batsman_thread, &batsman_ids[i]);
-
+static int batsman_ids[MAX_BATSMEN];
+    for (int i = 0; i < MAX_BATSMEN; i++) {
+    batsman_ids[i] = i;
+    pthread_create(&batsman_threads[i], NULL, batsman_thread, &batsman_ids[i]);
+}
     static int fielder_ids[MAX_FIELDERS];
     for (int i = 0; i < MAX_FIELDERS; i++) {
         fielder_ids[i] = i + 1;

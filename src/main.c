@@ -222,7 +222,9 @@ void run_match(int mode)
     innings_started = 1;
     pthread_cond_broadcast(&start_cond);
     pthread_mutex_unlock(&start_mutex);
-
+pthread_mutex_lock(&batsman_mutex);
+pthread_cond_broadcast(&batsman_cond);
+pthread_mutex_unlock(&batsman_mutex);
     printf("\n==============================\n");
     printf("  INNINGS 1 START\n");
     printf("==============================\n\n");
@@ -303,7 +305,9 @@ usleep(10000); // allow threads to pause
     innings_started = 1;
     pthread_cond_broadcast(&start_cond);
     pthread_mutex_unlock(&start_mutex);
-
+pthread_mutex_lock(&batsman_mutex);
+pthread_cond_broadcast(&batsman_cond);
+pthread_mutex_unlock(&batsman_mutex);
     printf("\n==============================\n");
     printf("  INNINGS 2 START\n");
     printf("==============================\n\n");
@@ -416,6 +420,7 @@ void init_batsmen()
         team1.players[i].start_time = -1;
         team1.players[i].wait_time = 0;
         team1.players[i].has_started = 0;
+team1.players[i].in_crease = 0;
 
         // TEAM 2
         team2.players[i].id = i;
@@ -431,6 +436,7 @@ void init_batsmen()
         team2.players[i].start_time = -1;
         team2.players[i].wait_time = 0;
         team2.players[i].has_started = 0;
+        team2.players[i].in_crease = 0;
     }
 
 }
@@ -540,7 +546,7 @@ void reset_players()
         team1.players[i].start_time = -1;
         team1.players[i].wait_time = 0;
         team1.players[i].has_started = 0;
-
+team1.players[i].in_crease = 0;
         // TEAM 2
         team2.players[i].runs = 0;
         team2.players[i].balls_faced = 0;
@@ -552,6 +558,7 @@ void reset_players()
         team2.players[i].start_time = -1;
         team2.players[i].wait_time = 0;
         team2.players[i].has_started = 0;
+        team2.players[i].in_crease = 0;
     }
 
     for (int i = 0; i < MAX_BOWLERS; i++)
