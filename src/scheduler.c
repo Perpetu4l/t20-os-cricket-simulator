@@ -58,15 +58,37 @@ int sjf_scheduler(){
 }
 
 void priority_scheduler(){// realsitci banan he 
+ 
+    if(match.score.overs == 19){
 
-    if(match.score.overs >= 19){
+        int prev = current_bowler;
+
+        int balls = bowlers[prev].balls_bowled;
+        int ov = balls / 6;
+        int rem = balls % 6;
+
+        double economy = 0.0;
+        if(balls > 0){
+            economy = bowlers[prev].runs_given / (balls / 6.0);
+        }
 
         current_bowler = DEATH_OVER_BOWLER;
 
         pthread_mutex_lock(&print_mutex);
 
-        printf("\n*** Priority Scheduler: Death Over Specialist Bowler %d ***\n\n",
-               current_bowler);
+        printf("\n  [PRIORITY!! CTX SWITCH] End of over %d | %s: %d.%d ov %d R %d W Econ: %.2f\n",
+            match.score.overs,
+            bowlers[prev].name,
+            ov, rem,
+            bowlers[prev].runs_given,
+            bowlers[prev].wickets,
+            economy
+        );
+
+        printf("  [PRIORITY!! CTX SWITCH] Loading %s for over %d...\n\n",
+            bowlers[current_bowler].name,
+            match.score.overs + 1
+        );
 
         pthread_mutex_unlock(&print_mutex);
     }

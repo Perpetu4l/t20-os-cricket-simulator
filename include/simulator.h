@@ -11,9 +11,9 @@
 
 #define MAX_FIELDERS 10
 #define MAX_BATSMEN 11
-#define MAX_BOWLERS 5
+#define MAX_BOWLERS 6
 #define MAX_OVERS 20
-#define DEATH_OVER_BOWLER 4
+#define DEATH_OVER_BOWLER 5
 #define MAX_BALL_EVENTS 800
 
 typedef struct {
@@ -23,7 +23,8 @@ typedef struct {
     int batsman_id;
     int mode;
     int innings;
-
+    int result;
+    int dismissal_type;
     char bowler_name[50];
     char batsman_name[50];
 
@@ -31,7 +32,7 @@ typedef struct {
 extern GanttCell gantt_chart[MAX_BALL_EVENTS];
 extern int gantt_count;
 
-void record_gantt(int bowler,int batsman,int over,int ball);
+void record_gantt(int bowler, int batsman, int over, int ball,int result, int dismissal_type);
 void print_gantt_chart();
 
 typedef struct {
@@ -94,7 +95,7 @@ void log_ball(int over, int ball, int result,
               int striker_id, int non_striker_id,
               int striker_before, int non_striker_before,
               int dismissal_type, int fielder_id,
-              int was_free_hit);
+              int was_free_hit, int victim);
 void init_sync();
 void swap_strike();
 
@@ -127,7 +128,7 @@ extern int striker_waiting;
 extern int nonstriker_waiting;
 extern pthread_mutex_t deadlock_mutex;
 
-int attempt_run(int thread_id);
+int attempt_run(int thread_id, int id);
 int detect_deadlock();
 void resolve_deadlock();
 void round_robin_scheduler();

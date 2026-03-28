@@ -10,7 +10,30 @@ extern int scheduling_type;
 extern Batsman* batsmen;
 extern Bowler* bowlers;
 
-void record_gantt(int bowler, int batsman, int over, int ball)
+char* get_result_str(int r)
+{
+    if (r == -1) return "OUT";
+    if (r == 0)  return "DOT";
+    if (r == 1)  return "1";
+    if (r == 2)  return "2";
+    if (r == 3)  return "3";
+    if (r == 4)  return "FOUR";
+    if (r == 6)  return "SIX";
+    if (r == 7)  return "WIDE";
+    if (r == 8)  return "NO BALL";
+    return "?";
+}
+
+char* get_dismissal_str(int d)
+{
+    if (d == OUT_NONE)     return "-";
+    if (d == OUT_BOWLED)   return "BOWLED";
+    if (d == OUT_RUNOUT)   return "RUN OUT";
+    if (d == OUT_DEADLOCK) return "DEADLOCK";
+    return "?";
+}
+
+void record_gantt(int bowler, int batsman, int over, int ball,int result, int dismissal_type)
 {
     // ALWAYS check bounds first (you were writing out of bounds before 💀)
     if (gantt_count >= MAX_BALL_EVENTS)
@@ -30,6 +53,9 @@ void record_gantt(int bowler, int batsman, int over, int ball)
 
     strcpy(gantt_chart[gantt_count].batsman_name,
            batsmen[batsman].name);
+
+    gantt_chart[gantt_count].result = result;
+    gantt_chart[gantt_count].dismissal_type = dismissal_type;
 
     gantt_count++;
 }
@@ -58,16 +84,20 @@ void print_gantt_chart()
             printf("\n[INNINGS %d]\n", gantt_chart[i].innings);
             last_innings = gantt_chart[i].innings;
 
-            printf("%-10s %-15s %-15s\n", "Ball", "Bowler", "Batsman");
-            printf("----------------------------------------------------\n");
+
+            printf("%-10s %-15s %-15s %-10s %-12s\n",
+            "Ball", "Bowler", "Batsman", "Result", "Dismissal");
+            printf("---------------------------------------------------------------------\n");
         }
 
         // USE STORED NAMES (not pointers, not current arrays, not vibes)
-        printf("%d.%d       %-15s %-15s\n",
-               gantt_chart[i].over,
-               gantt_chart[i].ball,
-               gantt_chart[i].bowler_name,
-               gantt_chart[i].batsman_name);
+        printf("%d.%d       %-15s %-15s %-10s %-12s\n",
+            gantt_chart[i].over,
+            gantt_chart[i].ball,
+            gantt_chart[i].bowler_name,
+            gantt_chart[i].batsman_name,
+            get_result_str(gantt_chart[i].result),
+            get_dismissal_str(gantt_chart[i].dismissal_type));
     }
 
     printf("\n");

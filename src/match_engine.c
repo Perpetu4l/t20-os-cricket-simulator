@@ -45,55 +45,66 @@ void perform_toss(){
 
     printf("\n");
 }
+
 int generate_ball_event(Batsman* bat, Bowler* bowler)
 {
     int skill = bat->job_length;
     int r = rand() % 100;
 
+    // ───── NO BALL (1%) ─────
+    if (r < 1) return 8;
+    r -= 1;
 
-     // ───── NO BALL (2%) ─────
-    if (r < 2) return 8;
-    r -= 2;
+    // ───── WIDE (4%) ─────
+    if (r < 4) return 7;
+    r -= 4;
 
-    // ───── WIDE (6%) ─────
-    if (r < 6) return 7;
-    r -= 6;
+    // ───── WICKET (REALISTIC) ─────
+    int skill_diff = skill - bowler->skill;
 
-    // ───── WICKET ─────
-    int skill_diff = bat->job_length - bowler->skill;
-    int wicket_prob = 8 - skill_diff / 6;
+    int wicket_prob = 4 - skill_diff / 10;   // LOWER BASE
 
     if (wicket_prob < 2) wicket_prob = 2;
-    if (wicket_prob > 15) wicket_prob = 15;
+    if (wicket_prob > 8) wicket_prob = 8;
 
     if (r < wicket_prob) return -1;
     r -= wicket_prob;
 
-    // ───── DOT ─────
-    if (r < 18) return 0;
-    r -= 18;
+    // ───── DOT BALL (IMPORTANT) ─────
+    int dot_prob = 22 + (bowler->skill / 10);
+    if (dot_prob > 35) dot_prob = 35;
 
-    // ───── SINGLES ─────
-    if (r < 32) return 1;
-    r -= 32;
+    if (r < dot_prob) return 0;
+    r -= dot_prob;
+
+    // ───── SINGLES (MOST COMMON) ─────
+    int single_prob = 38;
+    if (r < single_prob) return 1;
+    r -= single_prob;
 
     // ───── DOUBLES ─────
-    if (r < 14) return 2;
-    r -= 14;
+    int double_prob = 12;
+    if (r < double_prob) return 2;
+    r -= double_prob;
 
-    // ───── THREES ─────
-    if (r < 3) return 3;
-    r -= 3;
+    // ───── THREES (RARE) ─────
+    if (r < 2) return 3;
+    r -= 2;
 
-    // ───── BOUNDARIES ─────
-    int four_prob = 16 + skill / 5;
-    int six_prob  = 9 + skill / 8;
+    // ───── BOUNDARIES (SKILL BASED) ─────
+    int four_prob = 10 + skill / 8;
+    int six_prob  = 4 + skill / 12;
+
+    if (four_prob > 25) four_prob = 25;
+    if (six_prob > 12) six_prob = 12;
 
     if (r < four_prob) return 4;
     if (r < four_prob + six_prob) return 6;
 
+    // fallback
     return 1;
 }
+
 
 void update_score(int result) {
 
@@ -120,9 +131,9 @@ void swap_strike(){
 
 /* ================= RUN LOGIC ================= */
 
-int attempt_run(int thread_id)
+int attempt_run(int thread_id, int id)
 {
-    if(thread_id == 0)
+    if(id == 0)
     {
         pthread_mutex_lock(&end1_mutex);
 

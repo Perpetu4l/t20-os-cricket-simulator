@@ -250,7 +250,10 @@ pthread_mutex_unlock(&batsman_mutex);
     innings_started = 0;
     pthread_cond_broadcast(&start_cond);
     pthread_mutex_unlock(&start_mutex);
-
+   pthread_mutex_lock(&run_mutex);
+run_ready = 0;
+pthread_cond_broadcast(&run_cond);  // ← non-striker sees innings_started=0 and exits
+pthread_mutex_unlock(&run_mutex);
     // sleep(1)
 usleep(10000); // allow threads to pause
 
@@ -376,7 +379,7 @@ usleep(10000);
 void init_batsmen()
 {
     char *roles1[MAX_BATSMEN] = {
-        "Batsman", "Batsman", "Batsman", "Batsman", "WK",
+        "Batsman", "Batsman", "Batsman", "Batsman", "All-Rounder",
         "All-Rounder", "All-Rounder", "WK",
         "All-Rounder", "Bowler", "Bowler"
     };
@@ -388,7 +391,7 @@ void init_batsmen()
     };
 
     char *names1[MAX_BATSMEN] = {
-        "Rohit Sharma", "Gill", "Virat Kohli", "SKY", "KL Rahul",
+        "Rohit Sharma", "Gill", "Virat Kohli", "SKY", "Krunal Pandya",
         "Hardik Pandya", "Jadeja", "Dhoni",
         "Axar", "Bumrah", "Siraj"
     };
@@ -447,14 +450,15 @@ void init_bowlers()
 {
 
     char *names1[MAX_BOWLERS] = {
-        "Bumrah", "Siraj", "Shami", "Jadeja", "Hardik"};
+        "Siraj", "Shami", "Jadeja", "Hardik", "Krunal", "Bumrah"};
 
     char *names2[MAX_BOWLERS] = {
-        "Boult", "Southee", "Ferguson", "Santner", "Neesham"
+     "Southee", "Ferguson", "Santner", "Neesham", "Phillips", "Boult"
     };
 
-    int bowler_skills1[MAX_BOWLERS] = {45, 40, 38, 35, 32};
-    int bowler_skills2[MAX_BOWLERS] = {44, 39, 37, 34, 30};
+    int bowler_skills1[MAX_BOWLERS] = {40, 38, 35, 32, 32, 45};
+    int bowler_skills2[MAX_BOWLERS] = {39, 37, 34, 30, 30, 45};
+
     for (int i = 0; i < MAX_BOWLERS; i++)
     {
         team1.bowlers[i].id = i;
@@ -462,6 +466,7 @@ void init_bowlers()
         team1.bowlers[i].balls_bowled = 0;
         team1.bowlers[i].runs_given = 0;
         team1.bowlers[i].wickets = 0;
+        team1.bowlers[i].skill = bowler_skills1[i];
     }
 
     for (int i = 0; i < MAX_BOWLERS; i++)
@@ -471,6 +476,7 @@ void init_bowlers()
         team2.bowlers[i].balls_bowled = 0;
         team2.bowlers[i].runs_given = 0;
         team2.bowlers[i].wickets = 0;
+        team2.bowlers[i].skill = bowler_skills2[i];
     }
 }
 
@@ -546,7 +552,7 @@ void reset_players()
         team1.players[i].start_time = -1;
         team1.players[i].wait_time = 0;
         team1.players[i].has_started = 0;
-team1.players[i].in_crease = 0;
+        team1.players[i].in_crease = 0;
         // TEAM 2
         team2.players[i].runs = 0;
         team2.players[i].balls_faced = 0;

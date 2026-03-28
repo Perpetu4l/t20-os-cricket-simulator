@@ -5,7 +5,7 @@ void log_ball(int over, int ball, int result,
               int striker_id, int non_striker_id,
               int striker_before, int non_striker_before,
               int dismissal_type, int fielder_id,
-              int was_free_hit)
+              int was_free_hit, int victim)
 {
     pthread_mutex_lock(&print_mutex);
 
@@ -57,41 +57,43 @@ void log_ball(int over, int ball, int result,
     );
  
 
-// 👉 ADD THIS
-if (was_free_hit)
-    printf("  [FREE HIT]");
-    
-printf("\n");
+    // 👉 ADD THIS
+    if (was_free_hit)
+        printf("  [FREE HIT]");
+        
+    printf("\n");
 
     // 🎯 STRIKER INFO LINE (THIS IS THE SEXY PART)
-    if(ball!=0){
-    printf("        %s* %d(%d)   |   %s %d(%d)\n",
-        striker,
-        batsmen[striker_id].runs,
-        batsmen[striker_id].balls_faced,
-        non_striker,
-        batsmen[non_striker_id].runs,
-        batsmen[non_striker_id].balls_faced
-    );
-}
-else{
-    printf("        %s* %d(%d)   |   %s %d(%d)\n",
-        non_striker,
-        batsmen[striker_id].runs,
-        batsmen[striker_id].balls_faced,
-        striker,
-        batsmen[non_striker_id].runs,
-        batsmen[non_striker_id].balls_faced
-    );
-}
+    if (match.score.wickets < 10){
+        if(ball!=0||(ball==0&&(result==7||result==8))){
+            printf("        %s* %d(%d)   |   %s %d(%d)\n",
+                striker,
+                batsmen[striker_id].runs,
+                batsmen[striker_id].balls_faced,
+                non_striker,
+                batsmen[non_striker_id].runs,
+                batsmen[non_striker_id].balls_faced
+            );
+        }
+        else{
+            printf("        %s* %d(%d)   |   %s %d(%d)\n",
+                non_striker,
+                batsmen[non_striker_id].runs,
+                batsmen[non_striker_id].balls_faced,
+                striker,
+                batsmen[striker_id].runs,
+                batsmen[striker_id].balls_faced
+            );
+        }
+    }
 
     // 🎯 WICKET CARD
     if (result == -1 && !(was_free_hit && dismissal_type == OUT_BOWLED))
     {
         printf("        %s %d(%d)  ",
-            striker_before_name,
-            batsmen[striker_before].runs,
-            batsmen[striker_before].balls_faced
+            batsmen[victim].name,
+            batsmen[victim].runs,
+            batsmen[victim].balls_faced
         );
 
         if (dismissal_type == OUT_RUNOUT)
