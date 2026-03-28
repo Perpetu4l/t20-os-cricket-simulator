@@ -1,6 +1,8 @@
 #include "../include/simulator.h"
 #include <time.h>
 
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
 MatchState match;
 int pitch_ball = -2;
 int free_hit=0;
@@ -9,6 +11,7 @@ int target_score = 0;
 int innings = 1;
 
 int global_time = 0;
+int global_time_inning_1=0;
 int scheduling_type = 0; // 0 = SJF, 1 = FCFS
 
 float sjf_avg_team1, sjf_avg_team2;
@@ -36,8 +39,8 @@ void init_batsmen();
 void init_bowlers();
 void reset_match_state();
 void reset_players();
-float analyze_wait_time(Batsman *team);
-void print_wait_times(Batsman *team, char *name);
+float analyze_wait_time(Batsman *team, int time);
+void print_wait_times(Batsman *team, char *name, int time);
 
 int current_bowler = 0;
 pthread_t bowler_threads[MAX_BOWLERS];
@@ -72,12 +75,7 @@ int main()
     init_batsmen();
     init_bowlers();
 
-    /* 🔥 SET INITIAL ARRIVAL TIME (OPENERS) */
-    team1.players[0].arrival_time = 0;
-    team1.players[1].arrival_time = 0;
 
-    team2.players[0].arrival_time = 0;
-    team2.players[1].arrival_time = 0;
 
     print_team(team1);
     print_team(team2);
@@ -92,13 +90,13 @@ int main()
     printf("\n\n========== SJF SIMULATION ==========\n");
 
     global_time = 0;
+    global_time_inning_1=0;
     run_match(0);
 
-    sjf_avg_team1 = analyze_wait_time(team1.players);
-    sjf_avg_team2 = analyze_wait_time(team2.players);
-
-    print_wait_times(team1.players, team1.name);
-    print_wait_times(team2.players, team2.name);
+    sjf_avg_team1 = analyze_wait_time(team1.players, global_time_inning_1);
+    sjf_avg_team2 = analyze_wait_time(team2.players, global_time);
+    print_wait_times(team1.players, team1.name, global_time_inning_1);
+    print_wait_times(team2.players, team2.name, global_time);
 
     /* 🔥 STOP THREADS CLEANLY BEFORE NEXT RUN */
     pthread_mutex_lock(&start_mutex);
@@ -131,11 +129,11 @@ int main()
 
     run_match(1);
 
-    fcfs_avg_team1 = analyze_wait_time(team1.players);
-    fcfs_avg_team2 = analyze_wait_time(team2.players);
+    fcfs_avg_team1 = analyze_wait_time(team1.players, global_time_inning_1);
+    fcfs_avg_team2 = analyze_wait_time(team2.players, global_time);
 
-    print_wait_times(team1.players, team1.name);
-    print_wait_times(team2.players, team2.name);
+    print_wait_times(team1.players, team1.name, global_time_inning_1);
+    print_wait_times(team2.players, team2.name, global_time);
 
     /* 🔥 FINAL COMPARISON */
     printf("\n\n====================================\n");
@@ -152,15 +150,6 @@ int main()
 
     printf("\n====================================\n");
 
-    if (sjf_avg_team1 < fcfs_avg_team1)
-        printf("SJF performed better for %s\n", team1.name);
-    else
-        printf("FCFS performed better for %s\n", team1.name);
-
-    if (sjf_avg_team2 < fcfs_avg_team2)
-        printf("SJF performed better for %s\n", team2.name);
-    else
-        printf("FCFS performed better for %s\n", team2.name);
 
     print_gantt_chart();
 
@@ -213,22 +202,21 @@ void run_match(int mode)
 
     for(int i = 2; i < MAX_BATSMEN; i++){
         ready_queue[rq_size++] = i;
-        batsmen[i].arrival_time = global_time;
     }
-
     
-
+    global_time=0;
+    
     pthread_mutex_lock(&start_mutex);
     innings_started = 1;
     pthread_cond_broadcast(&start_cond);
     pthread_mutex_unlock(&start_mutex);
-pthread_mutex_lock(&batsman_mutex);
-pthread_cond_broadcast(&batsman_cond);
-pthread_mutex_unlock(&batsman_mutex);
+    pthread_mutex_lock(&batsman_mutex);
+    pthread_cond_broadcast(&batsman_cond);
+    pthread_mutex_unlock(&batsman_mutex);
     printf("\n==============================\n");
     printf("  INNINGS 1 START\n");
     printf("==============================\n\n");
-
+    
     while (1)
     {
         if (match.score.overs >= MAX_OVERS)
@@ -244,6 +232,9 @@ pthread_mutex_unlock(&batsman_mutex);
     printf("Score: %d/%d\n", match.score.runs, match.score.wickets);
     printf("Target: %d\n", target_score);
 
+    global_time_inning_1=global_time;
+
+
     /* ================= STOP THREADS ================= */
 
     pthread_mutex_lock(&start_mutex);
@@ -251,17 +242,20 @@ pthread_mutex_unlock(&batsman_mutex);
     pthread_cond_broadcast(&start_cond);
     pthread_mutex_unlock(&start_mutex);
    pthread_mutex_lock(&run_mutex);
-run_ready = 0;
-pthread_cond_broadcast(&run_cond);  // ← non-striker sees innings_started=0 and exits
-pthread_mutex_unlock(&run_mutex);
-    // sleep(1)
-usleep(10000); // allow threads to pause
+    run_ready = 0;
+    pthread_cond_broadcast(&run_cond);  // ← non-striker sees innings_started=0 and exits
+    pthread_mutex_unlock(&run_mutex);
+        // sleep(1)
+    usleep(10000); // allow threads to pause
 
     /* ================= RESET ================= */
 
     reset_match_state();
 
     /* ================= INNINGS 2 ================= */
+
+    global_time=0;
+
 
     innings = 2;
     if (toss_decision == 0)
@@ -301,7 +295,6 @@ usleep(10000); // allow threads to pause
 
     for(int i = 2; i < MAX_BATSMEN; i++){
         ready_queue[rq_size++] = i;
-        batsmen[i].arrival_time = global_time;
     }
 
     pthread_mutex_lock(&start_mutex);
@@ -419,10 +412,8 @@ void init_batsmen()
         team1.players[i].sixes = 0;
         team1.players[i].is_out = 0;
         team1.players[i].job_length = job_lengths1[i];
-        team1.players[i].arrival_time = 0;
-        team1.players[i].start_time = -1;
-        team1.players[i].wait_time = 0;
-        team1.players[i].has_started = 0;
+        team1.players[i].turn_around_time = 1000;
+
 team1.players[i].in_crease = 0;
 
         // TEAM 2
@@ -435,10 +426,8 @@ team1.players[i].in_crease = 0;
         team2.players[i].sixes = 0;
         team2.players[i].is_out = 0;
         team2.players[i].job_length = job_lengths2[i];
-        team2.players[i].arrival_time = 0;
-        team2.players[i].start_time = -1;
-        team2.players[i].wait_time = 0;
-        team2.players[i].has_started = 0;
+        team2.players[i].turn_around_time = 1000;
+
         team2.players[i].in_crease = 0;
     }
 
@@ -513,22 +502,16 @@ void reset_match_state()
     nonstriker_waiting = 0;
     pthread_mutex_unlock(&deadlock_mutex);
 
-    for (int i = 0; i < MAX_BATSMEN; i++)
-    {
-        batsmen[i].start_time = -1;
-        batsmen[i].wait_time = 0;
-        batsmen[i].has_started = 0;
-    }
 }
 
-float analyze_wait_time(Batsman *team)
+float analyze_wait_time(Batsman *team, int time)
 {
 
     int total = 0, count = 0;
 
     for (int i = 3; i <= 6; i++)
     {
-        total += team[i].wait_time;
+        total += min(team[i].turn_around_time,time)-team[i].balls_faced;
         count++;
     }
 
@@ -547,23 +530,19 @@ void reset_players()
         team1.players[i].fours = 0;
         team1.players[i].sixes = 0;
         team1.players[i].is_out = 0;
+        team1.players[i].turn_around_time = 1000;
 
-        team1.players[i].arrival_time = (i < 2 ? 0 : -1);
-        team1.players[i].start_time = -1;
-        team1.players[i].wait_time = 0;
-        team1.players[i].has_started = 0;
+
         team1.players[i].in_crease = 0;
         // TEAM 2
         team2.players[i].runs = 0;
         team2.players[i].balls_faced = 0;
         team2.players[i].fours = 0;
         team2.players[i].sixes = 0;
+        team1.players[i].turn_around_time = 1000;
         team2.players[i].is_out = 0;
 
-        team2.players[i].arrival_time = (i < 2 ? 0 : -1);
-        team2.players[i].start_time = -1;
-        team2.players[i].wait_time = 0;
-        team2.players[i].has_started = 0;
+
         team2.players[i].in_crease = 0;
     }
 
@@ -580,16 +559,27 @@ void reset_players()
     }
 }
 
-void print_wait_times(Batsman *team, char *name)
+void print_wait_times(Batsman *team, char *name, int time)
 {
 
     printf("\n=== WAIT TIME ANALYSIS (%s) ===\n", name);
 
+    printf("------------------------------------------------------------------\n");
+    printf("%-15s | %-18s | %-13s | %-10s\n",
+        "Player Name", "Turn Around Time", "Burst Time", "Wait Time");
+    printf("------------------------------------------------------------------\n");
+
     for (int i = 0; i < MAX_BATSMEN; i++)
     {
-        printf("%-15s -> %d\n", team[i].name, team[i].wait_time);
+        printf("%-15s | %-18d | %-13d | %-10d\n",
+            team[i].name,
+            min(team[i].turn_around_time,time),
+            team[i].balls_faced,
+            min(team[i].turn_around_time,time)-team[i].balls_faced);
     }
 
+    printf("-------------------------------------------------------------\n");
+
     printf("\n[MIDDLE ORDER AVG (3-6)] = %.2f\n",
-           analyze_wait_time(team));
+           analyze_wait_time(team, time));
 }

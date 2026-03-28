@@ -53,11 +53,8 @@ typedef struct {
     int sixes;
     int is_out;
     int job_length;
-    int arrival_time;
     int in_crease;
-int start_time;
-int wait_time;
-int has_started;
+    int turn_around_time;
 } Batsman;
 
 typedef struct {

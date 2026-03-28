@@ -164,12 +164,7 @@ void *batsman_thread(void *arg)
         pitch_ball = -2;
 
         Batsman *bat = &batsmen[batsman_id];
-        if (!bat->has_started) {
-            bat->start_time = global_time;
-            bat->wait_time  = bat->start_time - bat->arrival_time;
-            bat->has_started = 1;
-        }
-
+       
         Bowler *b = &bowlers[current_bowler];
         int runs_attempted = result;
         int runs_completed = result;
@@ -326,7 +321,9 @@ usleep(rand() % 20000 + 10000);   // 10–30 ms
 
             int out_player = (deadlock_happened || fielder_runout)
                              ? victim : batsman_id;
+            
 
+            batsmen[out_player].turn_around_time = global_time;
             if (deadlock_happened && runs_completed % 2 == 1)
                 swap_strike();
 
@@ -346,7 +343,6 @@ usleep(rand() % 20000 + 10000);   // 10–30 ms
                 next_batsman_idx = get_next_batsman();
 
                 if (next_batsman_idx >= 0 && next_batsman_idx < MAX_BATSMEN) {
-                    batsmen[next_batsman_idx].arrival_time = global_time;
                     wicket_happened = 1;
                     if (out_player == match.striker)
                         match.striker = next_batsman_idx;
