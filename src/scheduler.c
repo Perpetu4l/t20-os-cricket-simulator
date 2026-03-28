@@ -76,7 +76,7 @@ void priority_scheduler(){// realsitci banan he
 
         pthread_mutex_lock(&print_mutex);
 
-        printf("\n  [PRIORITY!! CTX SWITCH] End of over %d | %s: %d.%d ov %d R %d W Econ: %.2f\n",
+        printf("\n  [PRIORITY!! CTX SWITCH : DEATH OVER] End of over %d | %s: %d.%d ov %d R %d W Econ: %.2f\n",
             match.score.overs,
             bowlers[prev].name,
             ov, rem,
@@ -85,7 +85,7 @@ void priority_scheduler(){// realsitci banan he
             economy
         );
 
-        printf("  [PRIORITY!! CTX SWITCH] Loading %s for over %d...\n\n",
+        printf("  [PRIORITY!! CTX SWITCH : DEATH OVER] Loading %s for over %d...\n\n",
             bowlers[current_bowler].name,
             match.score.overs + 1
         );

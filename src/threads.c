@@ -259,9 +259,11 @@ usleep(rand() % 20000 + 10000);   // 10–30 ms
                 pthread_mutex_unlock(&fielder_mutex);
 
                 if (fielder_runout) {
-                    victim         = match.striker;
+                    runs_completed    = runs_attempted - 1;
+                    if (runs_completed < 0) runs_completed = 0;
+                    victim = (runs_completed % 2 == 0)
+                             ? match.striker : match.non_striker;
                     result         = -1;
-                    runs_completed = 0;
                 }
 
                 /* only wake non-striker if there is actually a run to complete */
@@ -287,6 +289,9 @@ usleep(rand() % 20000 + 10000);   // 10–30 ms
             b->runs_given += runs_completed;
             update_score(runs_completed);
         } else if (fielder_runout) {
+            bat->runs     += runs_completed;
+            b->runs_given += runs_completed;
+            update_score(runs_completed);   
             /* no runs */
         } else if (result == 8) {
             match.score.extras += 1;
@@ -307,7 +312,7 @@ usleep(rand() % 20000 + 10000);   // 10–30 ms
         int non_striker_before = match.non_striker;
 
         /* ══ STRIKE ROTATION ══ */
-        int runs_for_strike = deadlock_happened ? runs_completed : runs_attempted;
+        int runs_for_strike = ( deadlock_happened || fielder_runout ) ? runs_completed : runs_attempted;
         if (is_legal && result != -1)
             if (runs_for_strike % 2 == 1)
                 swap_strike();
@@ -324,6 +329,7 @@ usleep(rand() % 20000 + 10000);   // 10–30 ms
             
 
             batsmen[out_player].turn_around_time = global_time;
+            
             if (deadlock_happened && runs_completed % 2 == 1)
                 swap_strike();
 

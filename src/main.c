@@ -62,9 +62,6 @@ int main()
     match.ball_in_air = 0;
     match.match_running = 1;
 
-    match.striker = 0;
-    match.non_striker = 1;
-    match.next_batsman = 2;
 
     match.run_in_progress = 0;
 
@@ -148,7 +145,6 @@ int main()
     printf("SJF Avg Wait Time  = %.2f\n", sjf_avg_team2);
     printf("FCFS Avg Wait Time = %.2f\n", fcfs_avg_team2);
 
-    printf("\n====================================\n");
 
 
     print_gantt_chart();
@@ -194,16 +190,15 @@ void run_match(int mode)
 
     first_team_name = (batsmen == team1.players) ? team1.name : team2.name;
     // 🔥 RESET STRIKERS FOR THIS TEAM
-    match.striker = 0;
-    match.non_striker = 1;
-    match.next_batsman = 2;
-
     rq_size = 0;
-
-    for(int i = 2; i < MAX_BATSMEN; i++){
+    for(int i = 0; i < MAX_BATSMEN; i++){
         ready_queue[rq_size++] = i;
     }
-    
+
+    // scheduler decides openers
+    match.striker = get_next_batsman();
+    match.non_striker = get_next_batsman();
+
     global_time=0;
     
     pthread_mutex_lock(&start_mutex);
@@ -287,15 +282,14 @@ void run_match(int mode)
 
     second_team_name = (batsmen == team1.players) ? team1.name : team2.name;
     // 🔥 RESET STRIKERS FOR SECOND INNINGS TEAM
-    match.striker = 0;
-    match.non_striker = 1;
-    match.next_batsman = 2;
-
     rq_size = 0;
-
-    for(int i = 2; i < MAX_BATSMEN; i++){
+    for(int i = 0; i < MAX_BATSMEN; i++){
         ready_queue[rq_size++] = i;
     }
+
+    // scheduler decides openers
+    match.striker = get_next_batsman();
+    match.non_striker = get_next_batsman();
 
     pthread_mutex_lock(&start_mutex);
     innings_started = 1;
@@ -371,7 +365,7 @@ usleep(10000);
 
 void init_batsmen()
 {
-    char *roles1[MAX_BATSMEN] = {
+        char *roles1[MAX_BATSMEN] = {
         "Batsman", "Batsman", "Batsman", "Batsman", "All-Rounder",
         "All-Rounder", "All-Rounder", "WK",
         "All-Rounder", "Bowler", "Bowler"
@@ -425,7 +419,7 @@ team1.players[i].in_crease = 0;
         team2.players[i].fours = 0;
         team2.players[i].sixes = 0;
         team2.players[i].is_out = 0;
-        team2.players[i].job_length = job_lengths2[i];
+        team2.players[i].job_length =job_lengths2[i];
         team2.players[i].turn_around_time = 1000;
 
         team2.players[i].in_crease = 0;
@@ -539,7 +533,7 @@ void reset_players()
         team2.players[i].balls_faced = 0;
         team2.players[i].fours = 0;
         team2.players[i].sixes = 0;
-        team1.players[i].turn_around_time = 1000;
+        team2.players[i].turn_around_time = 1000;
         team2.players[i].is_out = 0;
 
 
@@ -578,7 +572,7 @@ void print_wait_times(Batsman *team, char *name, int time)
             min(team[i].turn_around_time,time)-team[i].balls_faced);
     }
 
-    printf("-------------------------------------------------------------\n");
+    printf("------------------------------------------------------------------\n");
 
     printf("\n[MIDDLE ORDER AVG (3-6)] = %.2f\n",
            analyze_wait_time(team, time));
