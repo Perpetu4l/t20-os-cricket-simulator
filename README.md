@@ -50,6 +50,15 @@ t20-os-cricket-simulator/
 
 ---
 
+##  Clone the repository
+
+```bash
+git clone https://github.com/Perpetu4l/t20-os-cricket-simulator.git
+cd t20-os-cricket-simulator
+```
+
+---
+
 ##  How to Compile
 
 Make sure you have **GCC** and **pthread library** installed.
