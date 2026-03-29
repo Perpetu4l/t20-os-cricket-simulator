@@ -69,9 +69,9 @@ gcc src/*.c -Iinclude -o simulator -lpthread
 ---
 ## Demo Video 
 [View Demo Video](https://drive.google.com/file/d/1_AYMzddsqNbVvnkcUkUmzYepnugNuu54/view?usp=sharing)
-[also present in ```bash ./docs```]
+Also present in `./docs`
 ---
 ## Report
 [View Report](https://drive.google.com/file/d/1lnBxMIoSqVTRB2TYCI2wFAOoZa9blB1D/view?usp=sharing)
-[also present in ```bash ./docs```]
+Also present in `./docs`
 ---
