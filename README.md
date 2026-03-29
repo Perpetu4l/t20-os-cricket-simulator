@@ -69,3 +69,4 @@ gcc src/*.c -Iinclude -o simulator -lpthread
 ---
 ## Demo Video
 ## Report
+[View Report](https://drive.google.com/file/d/1lnBxMIoSqVTRB2TYCI2wFAOoZa9blB1D/view?usp=sharing)
