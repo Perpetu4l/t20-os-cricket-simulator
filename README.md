@@ -111,7 +111,7 @@ Mapped outcomes:
 
 ---
 
-## 📊 Sample Output
+##  Sample Output
 
 - Over-wise commentary  
 - Total runs, wickets  
