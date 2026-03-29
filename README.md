@@ -68,10 +68,10 @@ gcc src/*.c -Iinclude -o simulator -lpthread
 
 ---
 ## Demo Video 
-[View Demo Video](https://drive.google.com/file/d/1_AYMzddsqNbVvnkcUkUmzYepnugNuu54/view?usp=sharing)
-Also present in `./docs`
+- [View Demo Video](https://drive.google.com/file/d/1_AYMzddsqNbVvnkcUkUmzYepnugNuu54/view?usp=sharing)
+- Also present in `./docs`
 ---
 ## Report
-[View Report](https://drive.google.com/file/d/1lnBxMIoSqVTRB2TYCI2wFAOoZa9blB1D/view?usp=sharing)
-Also present in `./docs`
+- [View Report](https://drive.google.com/file/d/1lnBxMIoSqVTRB2TYCI2wFAOoZa9blB1D/view?usp=sharing)
+- Also present in `./docs`
 ---
