@@ -9,12 +9,8 @@
 #include <semaphore.h>
 #include <string.h>
 
-#define MAX_FIELDERS 11
-#define MAX_BATSMEN 11
-#define MAX_BOWLERS 6
-#define MAX_OVERS 20
-#define DEATH_OVER_BOWLER 5
-#define MAX_BALL_EVENTS 800
+
+#define max_balls 800
 
 typedef struct {
     int over;
@@ -29,7 +25,7 @@ typedef struct {
     char batsman_name[50];
 
 } GanttCell;
-extern GanttCell gantt_chart[MAX_BALL_EVENTS];
+extern GanttCell gantt_chart[max_balls];
 extern int gantt_count;
 
 void record_gantt(int bowler, int batsman, int over, int ball,int result, int dismissal_type);
@@ -77,8 +73,8 @@ typedef struct {
 } MatchState;
 
 typedef struct {
-    Batsman players[MAX_BATSMEN];
-    Bowler bowlers[MAX_BOWLERS];
+    Batsman players[11];
+    Bowler bowlers[6];
     char name[50];
 } Team;
 
@@ -112,7 +108,7 @@ extern pthread_mutex_t fielder_mutex;
 
 
 extern int current_bowler;
-extern pthread_t bowler_threads[MAX_BOWLERS];
+extern pthread_t bowler_threads[6];
 extern Batsman* batsmen;
 extern Bowler* bowlers;
 
@@ -159,7 +155,7 @@ extern int scheduling_type;
 extern pthread_mutex_t start_mutex;
 
 extern int rq_size;
-extern int ready_queue[MAX_BATSMEN];
+extern int ready_queue[11];
 
 extern pthread_mutex_t crease_mutex;
 
@@ -167,10 +163,6 @@ int get_next_batsman();
 
 extern int free_hit;
 
-#define OUT_NONE     0
-#define OUT_BOWLED   1
-#define OUT_RUNOUT   2
-#define OUT_DEADLOCK 3
 
 
 #endif

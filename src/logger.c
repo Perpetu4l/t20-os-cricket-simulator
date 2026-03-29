@@ -1,48 +1,40 @@
 #include "../include/simulator.h"
 #include <string.h>
 
-void log_ball(int over, int ball, int result,
-              int striker_id, int non_striker_id,
-              int striker_before, int non_striker_before,
-              int dismissal_type, int fielder_id,
-              int was_free_hit, int victim)
+void log_ball(int over, int ball, int result, int striker_id, int non_striker_id,int striker_before, int non_striker_before,int dismissal_type, int fielder_id,int was_free_hit, int victim)
 {
     pthread_mutex_lock(&print_mutex);
 
     Team *fielding_team;
 
-    if (batsmen == team1.players)
-        fielding_team = &team2;
-    else
-        fielding_team = &team1;
+    if (batsmen == team1.players) fielding_team = &team2;
+    else fielding_team = &team1;
 
-    char *striker     = batsmen[striker_id].name;
+    char *striker = batsmen[striker_id].name;
     char *striker_before_name= batsmen[striker_before].name;
     char *non_striker = batsmen[non_striker_id].name;
-    char *bowler      = bowlers[current_bowler].name;
+    char *bowler = bowlers[current_bowler].name;
     
     char *fielder_name = "Unknown";
 
-    if (fielder_id > 0 && fielder_id <= MAX_BATSMEN)
+    if (fielder_id > 0 && fielder_id <= 11)
     {
         fielder_name = fielding_team->players[fielder_id - 1].name;
     }
   
 
     char event[80];
-
-    // 🎯 EVENT BUILDING
     if (result == -1)
     {
-        if (was_free_hit && dismissal_type == OUT_BOWLED)
+        if (was_free_hit && dismissal_type == 1)
         {
             strcpy(event, "BOWLED (Free Hit - Not Out)");
         }
-        else if (dismissal_type == OUT_RUNOUT)
+        else if (dismissal_type == 2)
         {
             sprintf(event, "RUN OUT (Fielder %s)", fielder_name);
         }
-        else if (dismissal_type == OUT_DEADLOCK)
+        else if (dismissal_type == 3)
         {
             strcpy(event, "RUN OUT (Mix-up!)");
         }
@@ -59,67 +51,30 @@ void log_ball(int over, int ball, int result,
     else if(result == 6) strcpy(event, "SIX!!");
     else if(result == 7) strcpy(event, "Wide");
     else if(result == 8) strcpy(event, "NO BALL + Free Hit");
-
-    // 🎯 MAIN LINE
     
-    printf("Over %2d.%d | %-10s to %-15s | %-22s | %3d/%d\n",
-        over, ball,
-        bowler,
-        striker_before_name,
-        event,
-        match.score.runs,
-        match.score.wickets
-    );
- 
+    printf("Over %2d.%d | %-10s to %-15s | %-22s | %3d/%d\n",over, ball,bowler,striker_before_name,event,match.score.runs,match.score.wickets);
 
-    // 👉 ADD THIS
-    if (was_free_hit)
-        printf("  [FREE HIT]");
+    if (was_free_hit) printf("  [FREE HIT]");
         
     printf("\n");
-
-    // 🎯 STRIKER INFO LINE (THIS IS THE SEXY PART)
     if (match.score.wickets < 10){
         if(ball!=0||(ball==0&&(result==7||result==8))){
-            printf("        %s* %d(%d)   |   %s %d(%d)\n",
-                striker,
-                batsmen[striker_id].runs,
-                batsmen[striker_id].balls_faced,
-                non_striker,
-                batsmen[non_striker_id].runs,
-                batsmen[non_striker_id].balls_faced
-            );
+            printf("        %s* %d(%d)   |   %s %d(%d)\n",striker, batsmen[striker_id].runs,batsmen[striker_id].balls_faced,non_striker,batsmen[non_striker_id].runs,batsmen[non_striker_id].balls_faced);
         }
         else{
-            printf("        %s* %d(%d)   |   %s %d(%d)\n",
-                non_striker,
-                batsmen[non_striker_id].runs,
-                batsmen[non_striker_id].balls_faced,
-                striker,
-                batsmen[striker_id].runs,
-                batsmen[striker_id].balls_faced
+            printf("        %s* %d(%d)   |   %s %d(%d)\n",non_striker,batsmen[non_striker_id].runs,batsmen[non_striker_id].balls_faced,striker,batsmen[striker_id].runs,batsmen[striker_id].balls_faced
             );
         }
     }
-
-    // 🎯 WICKET CARD
-    if (result == -1 && !(was_free_hit && dismissal_type == OUT_BOWLED))
+    if (result == -1 && !(was_free_hit && dismissal_type == 1))
     {
-        printf("        %s %d(%d)  ",
-            batsmen[victim].name,
-            batsmen[victim].runs,
-            batsmen[victim].balls_faced
-        );
+        printf("        %s %d(%d)  ",batsmen[victim].name,batsmen[victim].runs,batsmen[victim].balls_faced);
 
-        if (dismissal_type == OUT_RUNOUT)
-            printf("run out (Fielder %s)\n", fielder_name);
-        else if (dismissal_type == OUT_DEADLOCK)
-            printf("run out (mix-up)\n");
-        else
-            printf("b %s\n", bowler);
+        if (dismissal_type == 2) printf("run out (Fielder %s)\n", fielder_name);
+        else if (dismissal_type == 3) printf("run out (mix-up)\n");
+        else printf("b %s\n", bowler);
     }
 
-    // 🎯 TARGET INFO
     if (innings == 2)
     {
         int need = target_score - match.score.runs;

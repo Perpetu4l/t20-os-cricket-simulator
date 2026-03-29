@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include <time.h>
 
-int toss_winner;     // 0 = team1, 1 = team2
-int toss_decision;   // 0 = bat, 1 = bowl
+int toss_winner;    
+int toss_decision; 
 
 void print_team(Team team){
     printf("\nTeam: %s\n", team.name);
     printf("--------------------------------\n");
 
-    for(int i = 0; i < MAX_BATSMEN; i++){
+    for(int i = 0; i < 11; i++){
         printf("%2d. %-15s (%s)\n",
             i+1,
             team.players[i].name,
@@ -18,7 +18,7 @@ void print_team(Team team){
     }
 
     printf("\nBowlers:\n");
-    for(int i = 0; i < MAX_BOWLERS; i++){
+    for(int i = 0; i < 6; i++){
         printf(" - %s\n", team.bowlers[i].name);
     }
 
@@ -34,8 +34,7 @@ void perform_toss(){
     printf("         TOSS\n");
     printf("==============================\n");
 
-    printf("%s won the toss\n",
-        toss_winner == 0 ? team1.name : team2.name);
+    printf("%s won the toss\n",toss_winner == 0 ? team1.name : team2.name);
 
     if(toss_decision == 0){
         printf("Decision: BAT first\n");
@@ -50,80 +49,68 @@ int generate_ball_event(Batsman* bat, Bowler* bowler)
 {
     int skill = bat->job_length;
     int r = rand() % 100;
-
-    // ───── EXTRAS ─────
-    if (r < 1) return 8; // no ball
+    if (r < 1) return 8; 
     r -= 1;
 
-    if (r < 3) return 7; // wide
+    if (r < 3) return 7; 
     r -= 3;
-
-    // ───── WICKET (STRONGER DIFFERENCE) ─────
     int skill_diff = skill - bowler->skill;
 
-    int wicket_prob = 5 - skill_diff / 8;
+    int pw = 5 - skill_diff / 8;
 
-    if (wicket_prob < 2) wicket_prob = 2;
-    if (wicket_prob > 10) wicket_prob = 10;
+    if (pw < 2) pw = 2;
+    if (pw > 10) pw = 10;
 
-    // death overs = more risk
-    if (match.score.overs >= 16)
-        wicket_prob += 2;
+    if (match.score.overs >= 16)pw += 2;
 
-    if (r < wicket_prob) return -1;
-    r -= wicket_prob;
+    if (r < pw) return -1;
+    r -= pw;
 
-    // ───── DOT BALL ─────
-    int dot_prob = 20 + (bowler->skill / 8);
+    int p0 = 20 + (bowler->skill / 8);
 
-    if (match.score.overs >= 19)
-        dot_prob -= 3; // more aggressive batting
+    if (match.score.overs >= 19)p0 -= 3; 
 
-    if (dot_prob > 40) dot_prob = 40;
-    if (dot_prob < 10) dot_prob = 10;
+    if (p0 > 40) p0 = 40;
+    if (p0 < 10) p0 = 10;
 
-    if (r < dot_prob) return 0;
-    r -= dot_prob;
+    if (r < p0) return 0;
+    r -= p0;
 
-    // ───── SINGLES ─────
-    int single_prob = 30 + (skill / 20);
 
-    if (match.score.overs >= 16)
-        single_prob -= 5; // hitters go big
+    int p1 = 30 + (skill / 20);
 
-    if (r < single_prob) return 1;
-    r -= single_prob;
+    if (match.score.overs >= 16) p1 -= 5; 
 
-    // ───── DOUBLES ─────
-    int double_prob = 10 + (skill / 25);
-    if (r < double_prob) return 2;
-    r -= double_prob;
+    if (r < p1) return 1;
+    r -= p1;
 
-    // ───── THREES ─────
+
+    int p2 = 10 + (skill / 25);
+    if (r < p2) return 2;
+    r -= p2;
+
+
     if (r < 2) return 3;
     r -= 2;
 
-    // ───── BOUNDARIES ─────
-    int four_prob = 8 + skill / 6;
-    int six_prob  = 3 + skill / 10;
+    int p4 = 8 + skill / 6;
+    int p6  = 3 + skill / 10;
 
-    // death overs boost
     if (match.score.overs >= 16) {
-        four_prob += 5;
-        six_prob += 4;
+        p4 += 5;
+        p6 += 4;
     }
 
-    // tailenders nerf
     if (skill < 15) {
-        four_prob /= 2;
-        six_prob /= 3;
+        p4 /= 2;
+        p6 /= 3;
     }
 
-    if (four_prob > 30) four_prob = 30;
-    if (six_prob > 15) six_prob = 15;
+    if (p4 > 30) p4 = 30;
+    if (p6 > 15) p6 = 15;
 
-    if (r < four_prob) return 4;
-    if (r < four_prob + six_prob) return 6;
+    if (r < p4) return 4;
+    if (r < p4 + p6) return 6;
 
     return 1;
 }
@@ -133,8 +120,7 @@ void update_score(int result) {
 
     pthread_mutex_lock(&score_mutex);
 
-    if(result == -1) {
-        match.score.wickets++;
+    if(result == -1) { match.score.wickets++;
     }   
     else if(result == 7) {
         match.score.runs += 1;
@@ -152,7 +138,7 @@ void swap_strike(){
     match.non_striker = temp;
 }
 
-/* ================= RUN LOGIC ================= */
+
 
 int attempt_run(int thread_id, int id)
 {
@@ -217,7 +203,6 @@ int detect_deadlock()
     return deadlock;
 }
 
-/* ================= DEADLOCK HANDLER ================= */
 
 void resolve_deadlock()
 {
@@ -227,24 +212,12 @@ void resolve_deadlock()
 
     pthread_mutex_unlock(&print_mutex);
 
-    /* reset flags */
     pthread_mutex_lock(&deadlock_mutex);
     striker_waiting    = 0;
     nonstriker_waiting = 0;
     pthread_mutex_unlock(&deadlock_mutex);
 
-    /* Force-release end1 and end2 only if they are currently locked.
-       attempt_run() releases the mutex it owns before returning 1
-       (striker releases end1, non-striker releases end2), so by the
-       time we get here both mutexes are ALREADY UNLOCKED.
-       Calling pthread_mutex_unlock on an unlocked mutex you don't own
-       is undefined behaviour and silently corrupts the mutex on Linux,
-       causing future lock calls to hang permanently.
-       Use trylock: if it succeeds we own it and can safely unlock it;
-       if it fails someone else holds it and we leave it alone. */
-    if (pthread_mutex_trylock(&end1_mutex) == 0)
-        pthread_mutex_unlock(&end1_mutex);
+    if (pthread_mutex_trylock(&end1_mutex) == 0) pthread_mutex_unlock(&end1_mutex);
 
-    if (pthread_mutex_trylock(&end2_mutex) == 0)
-        pthread_mutex_unlock(&end2_mutex);
+    if (pthread_mutex_trylock(&end2_mutex) == 0) pthread_mutex_unlock(&end2_mutex);
 }
