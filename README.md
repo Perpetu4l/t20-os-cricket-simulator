@@ -30,7 +30,10 @@ t20-os-cricket-simulator/
 │
 ├── include/
 │   └── simulator.h          # Header file (structures + declarations)
-│
+│── docs/
+│   └── REPORT.pdf
+│   └── demo_video.mp4
+│   └── presentation.pptx       
 ├── src/
 │   ├── main.c               # Entry point of the program
 │   ├── match_engine.c       # Core match simulation logic
@@ -65,4 +68,4 @@ gcc src/*.c -Iinclude -o simulator -lpthread
 
 ---
 ## Demo Video
-## Reoprt
+## Report
