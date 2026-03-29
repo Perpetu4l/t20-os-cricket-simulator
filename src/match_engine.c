@@ -61,7 +61,7 @@ int generate_ball_event(Batsman* bat, Bowler* bowler)
     if (pw < 2) pw = 2;
     if (pw > 10) pw = 10;
 
-    if (match.score.overs >= 16)pw += 2;
+    if (match.score.overs >= 19)pw += 2;
 
     if (r < pw) return -1;
     r -= pw;
@@ -79,7 +79,7 @@ int generate_ball_event(Batsman* bat, Bowler* bowler)
 
     int p1 = 30 + (skill / 20);
 
-    if (match.score.overs >= 16) p1 -= 5; 
+    if (match.score.overs >= 19) p1 -= 5; 
 
     if (r < p1) return 1;
     r -= p1;
@@ -96,7 +96,7 @@ int generate_ball_event(Batsman* bat, Bowler* bowler)
     int p4 = 8 + skill / 6;
     int p6  = 3 + skill / 10;
 
-    if (match.score.overs >= 16) {
+    if (match.score.overs >= 19) {
         p4 += 5;
         p6 += 4;
     }
