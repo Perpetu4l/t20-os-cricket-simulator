@@ -9,7 +9,7 @@
 #include <semaphore.h>
 #include <string.h>
 
-#define MAX_FIELDERS 10
+#define MAX_FIELDERS 11
 #define MAX_BATSMEN 11
 #define MAX_BOWLERS 6
 #define MAX_OVERS 20
@@ -46,7 +46,7 @@ typedef struct {
 typedef struct {
     int id;
     char name[50];
-    char role[20];   // Batter / Bowler / All-Rounder / WK
+    char role[20];   
     int runs;
     int balls_faced;
     int fours;
@@ -59,7 +59,7 @@ typedef struct {
 
 typedef struct {
     int id;
-    char name[50];   // 🔥 added
+    char name[50];   
     int balls_bowled;
     int runs_given;
     int wickets;
@@ -96,11 +96,11 @@ void log_ball(int over, int ball, int result,
 void init_sync();
 void swap_strike();
 
-/* pitch buffer */
+
 extern int pitch_ball;
 extern pthread_mutex_t batsman_mutex;
 extern pthread_cond_t batsman_cond;
-/* synchronization */
+
 extern pthread_mutex_t pitch_mutex;
 extern pthread_mutex_t score_mutex;
 extern pthread_mutex_t print_mutex;
@@ -110,17 +110,16 @@ extern sem_t crease_sem;
 extern pthread_cond_t ball_hit_cond;
 extern pthread_mutex_t fielder_mutex;
 
-/* scheduler */
+
 extern int current_bowler;
 extern pthread_t bowler_threads[MAX_BOWLERS];
 extern Batsman* batsmen;
 extern Bowler* bowlers;
 
-/* crease resources */
 extern pthread_mutex_t end1_mutex;
 extern pthread_mutex_t end2_mutex;
 
-/* deadlock */
+
 extern int striker_waiting;
 extern int nonstriker_waiting;
 extern pthread_mutex_t deadlock_mutex;

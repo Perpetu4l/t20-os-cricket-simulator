@@ -1,8 +1,5 @@
 #include "../include/simulator.h"
-
-
 void round_robin_scheduler(){
-
     int prev = current_bowler;
 
     current_bowler = (current_bowler + 1) % MAX_BOWLERS;

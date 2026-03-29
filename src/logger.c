@@ -9,10 +9,25 @@ void log_ball(int over, int ball, int result,
 {
     pthread_mutex_lock(&print_mutex);
 
+    Team *fielding_team;
+
+    if (batsmen == team1.players)
+        fielding_team = &team2;
+    else
+        fielding_team = &team1;
+
     char *striker     = batsmen[striker_id].name;
     char *striker_before_name= batsmen[striker_before].name;
     char *non_striker = batsmen[non_striker_id].name;
     char *bowler      = bowlers[current_bowler].name;
+    
+    char *fielder_name = "Unknown";
+
+    if (fielder_id > 0 && fielder_id <= MAX_BATSMEN)
+    {
+        fielder_name = fielding_team->players[fielder_id - 1].name;
+    }
+  
 
     char event[80];
 
@@ -25,7 +40,7 @@ void log_ball(int over, int ball, int result,
         }
         else if (dismissal_type == OUT_RUNOUT)
         {
-            sprintf(event, "RUN OUT (Fielder %d)", fielder_id);
+            sprintf(event, "RUN OUT (Fielder %s)", fielder_name);
         }
         else if (dismissal_type == OUT_DEADLOCK)
         {
@@ -47,7 +62,7 @@ void log_ball(int over, int ball, int result,
 
     // 🎯 MAIN LINE
     
-    printf("Over %2d.%d | %-12s → %-15s | %-22s | %3d/%d\n",
+    printf("Over %2d.%d | %-10s to %-15s | %-22s | %3d/%d\n",
         over, ball,
         bowler,
         striker_before_name,
@@ -97,7 +112,7 @@ void log_ball(int over, int ball, int result,
         );
 
         if (dismissal_type == OUT_RUNOUT)
-            printf("run out (Fielder %d)\n", fielder_id);
+            printf("run out (Fielder %s)\n", fielder_name);
         else if (dismissal_type == OUT_DEADLOCK)
             printf("run out (mix-up)\n");
         else

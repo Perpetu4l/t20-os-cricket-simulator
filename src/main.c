@@ -33,6 +33,7 @@ Team team1, team2;
 Batsman *batsmen = NULL;
 Bowler *bowlers = NULL;
 
+
 void create_players();
 void run_match(int mode);
 void init_batsmen();
@@ -50,12 +51,12 @@ int main()
 
     srand(time(NULL));
 
-    printf("+------------------------------------------------------+\n");
-    printf("|     T20 WC 2026 Cricket Simulator  --  OS CSC-204   |\n");
-    printf("+------------------------------------------------------+\n");
-    printf("|  Threads: baad mei batayenge                          |\n");
-    printf("|  Schedulers: RR + SJF + Priority                    |\n");
-    printf("+------------------------------------------------------+\n\n");
+    printf("+----------------------------------------------------------------------+\n");
+    printf("|            T20 WC 2026 Cricket Simulator    -     OS CSC-204         |\n");
+    printf("+----------------------------------------------------------------------+\n");
+    printf("|  Threads: 11 Batsman threads + 11 fielder(including Bowler threads)  |\n");
+    printf("|                 Schedulers: RR  + Priority + SJF/FCFS                |\n");
+    printf("+----------------------------------------------------------------------+\n\n");
 
     match.score = (Score){0, 0, 0, 0, 0};
 
@@ -90,11 +91,23 @@ int main()
     global_time_inning_1=0;
     run_match(0);
 
-    sjf_avg_team1 = analyze_wait_time(team1.players, global_time_inning_1);
-    sjf_avg_team2 = analyze_wait_time(team2.players, global_time);
-    print_wait_times(team1.players, team1.name, global_time_inning_1);
-    print_wait_times(team2.players, team2.name, global_time);
+    if (strcmp(first_team_name, team1.name) == 0)
+    {
+        sjf_avg_team1 = analyze_wait_time(team1.players, global_time_inning_1);
+        sjf_avg_team2 = analyze_wait_time(team2.players, global_time);
 
+        print_wait_times(team1.players, team1.name, global_time_inning_1);
+        print_wait_times(team2.players, team2.name, global_time);
+    }
+    else
+    {
+        sjf_avg_team2 = analyze_wait_time(team2.players, global_time_inning_1);
+        sjf_avg_team1 = analyze_wait_time(team1.players, global_time);
+
+        print_wait_times(team2.players, team2.name, global_time_inning_1);
+        print_wait_times(team1.players, team1.name, global_time);
+    }
+   
     /* 🔥 STOP THREADS CLEANLY BEFORE NEXT RUN */
     pthread_mutex_lock(&start_mutex);
     innings_started = 0;
@@ -126,11 +139,22 @@ int main()
 
     run_match(1);
 
-    fcfs_avg_team1 = analyze_wait_time(team1.players, global_time_inning_1);
-    fcfs_avg_team2 = analyze_wait_time(team2.players, global_time);
+    if (strcmp(first_team_name, team1.name) == 0)
+    {
+        fcfs_avg_team1 = analyze_wait_time(team1.players, global_time_inning_1);
+        fcfs_avg_team2 = analyze_wait_time(team2.players, global_time);
 
-    print_wait_times(team1.players, team1.name, global_time_inning_1);
-    print_wait_times(team2.players, team2.name, global_time);
+        print_wait_times(team1.players, team1.name, global_time_inning_1);
+        print_wait_times(team2.players, team2.name, global_time);
+    }
+    else
+    {
+        fcfs_avg_team2 = analyze_wait_time(team2.players, global_time_inning_1);
+        fcfs_avg_team1 = analyze_wait_time(team1.players, global_time);
+
+        print_wait_times(team2.players, team2.name, global_time_inning_1);
+        print_wait_times(team1.players, team1.name, global_time);
+    }
 
     /* 🔥 FINAL COMPARISON */
     printf("\n\n====================================\n");
@@ -215,10 +239,20 @@ void run_match(int mode)
     while (1)
     {
         if (match.score.overs >= MAX_OVERS)
+        {
+            printf("\nOVERS COMPLETED!\n");
             break;
+
+        }
+
         if (match.score.wickets >= 10)
+        {
+            printf("\nALL OUT!\n");
             break;
-        usleep(1000);
+        }
+
+        // sleep(1)
+usleep(10000);
     }
 
     target_score = match.score.runs + 1;

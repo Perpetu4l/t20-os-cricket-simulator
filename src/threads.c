@@ -396,9 +396,7 @@ usleep(rand() % 20000 + 10000);   // 10–30 ms
                 printf("         + Deadlock resolved : Run-out due to circular wait\n");
                 pthread_mutex_unlock(&print_mutex);
             } else if (fielder_runout) {
-                pthread_mutex_lock(&print_mutex);
-                printf("         + Direct hit by fielder %d\n", saved_fielder_id);
-                pthread_mutex_unlock(&print_mutex);
+                
             }
 
             if (wicket_happened && match.score.wickets < 10) {
