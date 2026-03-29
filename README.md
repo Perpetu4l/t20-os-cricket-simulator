@@ -75,3 +75,7 @@ gcc src/*.c -Iinclude -o simulator -lpthread
 - [View Report](https://drive.google.com/file/d/1lnBxMIoSqVTRB2TYCI2wFAOoZa9blB1D/view?usp=sharing)
 - Also present in `./docs`
 ---
+## Presentation
+- [View Presentation](https://docs.google.com/presentation/d/1cZFL2dq5qcgaY9d8uzKdMGl0z5SOwI38/edit?usp=sharing&ouid=107112480013412523230&rtpof=true&sd=true)
+- Also present in `./docs`
+---
