@@ -80,7 +80,7 @@ gcc src/*.c -Iinclude -o simulator -lpthread
 - Also present in `./docs`
 ---
 ## Report
-- [View Report](https://drive.google.com/file/d/1Hr32ECVocaf2WK6lC0zC6ugZL30L7fHy/view?usp=sharing)
+- [View Report](https://drive.google.com/file/d/1MZpy0QVuU0buePMO4rKyeXKWB_Nv4nol/view?usp=drive_link)
 - Also present in `./docs`
 ---
 ---
