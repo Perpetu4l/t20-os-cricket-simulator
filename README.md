@@ -84,9 +84,6 @@ gcc src/*.c -Iinclude -o simulator -lpthread
 - [View Report](https://drive.google.com/file/d/1Hr32ECVocaf2WK6lC0zC6ugZL30L7fHy/view?usp=sharing)
 - Also present in `./docs`
 ---
-## Presentation
-- [View Presentation](https://docs.google.com/presentation/d/1cZFL2dq5qcgaY9d8uzKdMGl0z5SOwI38/edit?usp=sharing&ouid=107112480013412523230&rtpof=true&sd=true)
-- Also present in `./docs`
 ---
 ## Note
 This project was developed collaboratively by all group members. Since the implementation and testing were carried out on a single Linux laptop, the Git commit history primarily reflects contributions from that machine and may not accurately represent the individual coding contributions of each team member.
